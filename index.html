@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pickleball Team Mixer</title>
+<style>
+  :root {
+    --green: #1f7a4d;
+    --green-dark: #145c39;
+    --yellow: #d9c400;
+    --bg: #f7f8f5;
+    --card: #ffffff;
+    --border: #dde3dc;
+    --text: #1e2a22;
+    --muted: #66756c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px 16px 80px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 {
+    font-size: 1.7rem;
+    margin: 0 0 4px;
+    color: var(--green-dark);
+  }
+  .sub { color: var(--muted); margin: 0 0 24px; font-size: 0.95rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+  .hint { color: var(--muted); font-size: 0.82rem; margin: -2px 0 8px; }
+  textarea, input[type=number], select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: #fff;
+    color: var(--text);
+  }
+  textarea { min-height: 140px; resize: vertical; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 160px; }
+  .field { margin-bottom: 16px; }
+  .radio-group { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 4px; }
+  .radio-group label { display: flex; align-items: center; gap: 6px; font-weight: 500; margin: 0; cursor: pointer; }
+  .radio-group input { margin: 0; }
+  .checkbox { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+  .checkbox input { margin: 0; }
+  button {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: var(--green-dark); }
+  button.secondary {
+    background: #fff;
+    color: var(--green-dark);
+    border: 1px solid var(--green);
+  }
+  button.secondary:hover { background: #eef7f1; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+  #error {
+    color: #a12626;
+    background: #fdecec;
+    border: 1px solid #f3c6c6;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    display: none;
+    font-size: 0.9rem;
+  }
+  .round {
+    margin-bottom: 22px;
+  }
+  .round h2 {
+    font-size: 1.1rem;
+    color: var(--green-dark);
+    border-bottom: 2px solid var(--yellow);
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .bye {
+    color: var(--muted);
+    font-style: italic;
+    font-size: 0.88rem;
+    margin-top: 6px;
+  }
+  .teams-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .team-chip {
+    background: #eef7f1;
+    border: 1px solid #cfe8da;
+    color: var(--green-dark);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+  }
+  #results { display: none; }
+  @media print {
+    .card.input-card, .actions, h1 + .sub { display: none !important; }
+    body { padding: 0; background: #fff; }
+    .round { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏓 Pickleball Team Mixer</h1>
+  <p class="sub">Fixed partners, rotating opponents — build a round-robin court schedule for your event.</p>
+
+  <div id="error"></div>
+
+  <div class="card input-card">
+    <div class="field">
+      <label>How are you entering players?</label>
+      <div class="radio-group">
+        <label><input type="radio" name="mode" value="individual" checked> Individual players (I'll auto-pair them into teams)</label>
+        <label><input type="radio" name="mode" value="teams"> Already-formed teams</label>
+      </div>
+    </div>
+
+    <div class="field" id="individualField">
+      <label for="players">Player names (one per line, even number)</label>
+      <div class="hint">They'll be paired in the order listed, unless you check "shuffle" below.</div>
+      <textarea id="players" placeholder="Alex&#10;Jamie&#10;Sam&#10;Taylor&#10;Jordan&#10;Casey&#10;Morgan&#10;Riley"></textarea>
+      <div class="checkbox" style="margin-top:8px;">
+        <input type="checkbox" id="shuffle" checked>
+        <label for="shuffle" style="margin:0;">Shuffle before pairing (random partners)</label>
+      </div>
+    </div>
+
+    <div class="field" id="teamsField" style="display:none;">
+      <label for="teamsInput">Teams (one per line, format: Player A / Player B)</label>
+      <div class="hint">Use a slash, comma, or "&" to separate the two partners on a team.</div>
+      <textarea id="teamsInput" placeholder="Alex / Jamie&#10;Sam / Taylor&#10;Jordan / Casey&#10;Morgan / Riley"></textarea>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="courts">Number of courts</label>
+        <input type="number" id="courts" min="1" value="2">
+      </div>
+      <div class="field">
+        <label for="roundsMode">Rounds</label>
+        <select id="roundsMode">
+          <option value="full">Full round robin (everyone plays everyone once)</option>
+          <option value="custom">Custom number of rounds</option>
+        </select>
+      </div>
+      <div class="field" id="customRoundsField" style="display:none;">
+        <label for="customRounds">How many rounds</label>
+        <input type="number" id="customRounds" min="1" value="3">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="generateBtn">Generate Schedule</button>
+    </div>
+  </div>
+
+  <div id="results">
+    <div class="card" id="teamsSummaryCard">
+      <label style="margin-bottom:10px;">Teams</label>
+      <div class="teams-summary" id="teamsSummary"></div>
+    </div>
+    <div id="scheduleContainer"></div>
+    <div class="actions">
+      <button class="secondary" id="printBtn">Print / Save as PDF</button>
+      <button class="secondary" id="csvBtn">Download CSV</button>
+      <button class="secondary" id="regenBtn">Shuffle &amp; Regenerate</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const modeRadios = document.querySelectorAll('input[name="mode"]');
+  const individualField = document.getElementById('individualField');
+  const teamsField = document.getElementById('teamsField');
+  const roundsMode = document.getElementById('roundsMode');
+  const customRoundsField = document.getElementById('customRoundsField');
+  const errorBox = document.getElementById('error');
+  const results = document.getElementById('results');
+  const teamsSummary = document.getElementById('teamsSummary');
+  const scheduleContainer = document.getElementById('scheduleContainer');
+
+  let lastMatches = null; // cached for CSV export
+
+  modeRadios.forEach(r => r.addEventListener('change', () => {
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+    individualField.style.display = mode === 'individual' ? 'block' : 'none';
+    teamsField.style.display = mode === 'teams' ? 'block' : 'none';
+  }));
+
+  roundsMode.addEventListener('change', () => {
+    customRoundsField.style.display = roundsMode.value === 'custom' ? 'block' : 'none';
+  });
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.style.display = 'block';
+    results.style.display = 'none';
+  }
+  function clearError() {
+    errorBox.style.display = 'none';
+    errorBox.textContent = '';
+  }
+
+  function shuffleArray(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function parsePlayers() {
+    return document.getElementById('players').value
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  function parseTeamsInput() {
+    return document.getElementById('teamsInput').value
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(line => {
+        const parts = line.split(/\s*[\/,&]\s*|\s+and\s+/i).map(s => s.trim()).filter(Boolean);
+        if (parts.length < 2) return null;
+        return { name: parts[0] + ' & ' + parts[1], players: [parts[0], parts[1]] };
+      });
+  }
+
+  function buildTeams() {
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+    if (mode === 'individual') {
+      let players = parsePlayers();
+      if (players.length < 4) throw new Error('Enter at least 4 players.');
+      if (players.length % 2 !== 0) throw new Error('Enter an even number of players so everyone gets a partner.');
+      const shuffle = document.getElementById('shuffle').checked;
+      if (shuffle) players = shuffleArray(players);
+      const teams = [];
+      for (let i = 0; i < players.length; i += 2) {
+        teams.push({ name: players[i] + ' & ' + players[i + 1], players: [players[i], players[i + 1]] });
+      }
+      return teams;
+    } else {
+      const teams = parseTeamsInput();
+      if (teams.some(t => t === null)) throw new Error('Each team line needs two names separated by "/", ",", "&", or "and".');
+      if (teams.length < 2) throw new Error('Enter at least 2 teams.');
+      return teams;
+    }
+  }
+
+  // Circle method round-robin: returns array of rounds, each round is array of [teamIndexA, teamIndexB] (or null for bye)
+  function roundRobinRounds(n) {
+    const teams = [...Array(n).keys()];
+    const hasBye = n % 2 !== 0;
+    if (hasBye) teams.push(-1); // -1 = bye slot
+    const total = teams.length;
+    const numRounds = total - 1;
+    const half = total / 2;
+    const arr = teams.slice();
+    const rounds = [];
+    for (let r = 0; r < numRounds; r++) {
+      const roundPairs = [];
+      for (let i = 0; i < half; i++) {
+        const a = arr[i], b = arr[total - 1 - i];
+        if (a !== -1 && b !== -1) roundPairs.push([a, b]);
+        else if (a === -1) roundPairs.push([b, -1]); // bye marker attached to b
+        else roundPairs.push([a, -1]);
+      }
+      rounds.push(roundPairs);
+      // rotate all but the first element
+      const fixed = arr[0];
+      const rest = arr.slice(1);
+      rest.unshift(rest.pop());
+      arr.splice(0, arr.length, fixed, ...rest);
+    }
+    return rounds;
+  }
+
+  function generateSchedule(teams, courts, desiredRounds) {
+    const n = teams.length;
+    const robin = roundRobinRounds(n);
+    const maxFullRounds = robin.length;
+    let roundsToUse = robin;
+    if (desiredRounds && desiredRounds < maxFullRounds) {
+      roundsToUse = robin.slice(0, desiredRounds);
+    } else if (desiredRounds && desiredRounds > maxFullRounds) {
+      // repeat the robin cycle to fill extra rounds requested
+      const extended = [];
+      for (let i = 0; i < desiredRounds; i++) {
+        extended.push(robin[i % maxFullRounds]);
+      }
+      roundsToUse = extended;
+    }
+
+    // Build display rounds, splitting into heats when matches > courts
+    const displayRounds = [];
+    roundsToUse.forEach((roundPairs, idx) => {
+      const matches = roundPairs.filter(p => p[0] !== -1 && p[1] !== -1);
+      const byes = roundPairs.filter(p => p[1] === -1).map(p => p[0]);
+      const heats = [];
+      for (let i = 0; i < matches.length; i += courts) {
+        heats.push(matches.slice(i, i + courts));
+      }
+      if (heats.length === 0) heats.push([]);
+      displayRounds.push({ roundNumber: idx + 1, heats, byes });
+    });
+
+    return displayRounds;
+  }
+
+  function renderTeamsSummary(teams) {
+    teamsSummary.innerHTML = '';
+    teams.forEach(t => {
+      const chip = document.createElement('span');
+      chip.className = 'team-chip';
+      chip.textContent = t.name;
+      teamsSummary.appendChild(chip);
+    });
+  }
+
+  function renderSchedule(displayRounds, teams) {
+    scheduleContainer.innerHTML = '';
+    const csvRows = [['Round', 'Heat', 'Court', 'Team A', 'Team B']];
+
+    displayRounds.forEach(round => {
+      const roundDiv = document.createElement('div');
+      roundDiv.className = 'round';
+      const totalHeats = round.heats.length;
+
+      round.heats.forEach((heat, heatIdx) => {
+        const heading = document.createElement('h2');
+        heading.textContent = totalHeats > 1
+          ? `Round ${round.roundNumber} — Heat ${heatIdx + 1} of ${totalHeats}`
+          : `Round ${round.roundNumber}`;
+        roundDiv.appendChild(heading);
+
+        const table = document.createElement('table');
+        table.innerHTML = '<thead><tr><th>Court</th><th>Team A</th><th>Team B</th></tr></thead>';
+        const tbody = document.createElement('tbody');
+        heat.forEach((match, i) => {
+          const tr = document.createElement('tr');
+          const teamA = teams[match[0]].name;
+          const teamB = teams[match[1]].name;
+          tr.innerHTML = `<td>Court ${i + 1}</td><td>${teamA}</td><td>${teamB}</td>`;
+          tbody.appendChild(tr);
+          csvRows.push([round.roundNumber, heatIdx + 1, i + 1, teamA, teamB]);
+        });
+        table.appendChild(tbody);
+        roundDiv.appendChild(table);
+      });
+
+      if (round.byes.length) {
+        const byeP = document.createElement('p');
+        byeP.className = 'bye';
+        byeP.textContent = 'Bye: ' + round.byes.map(i => teams[i].name).join(', ');
+        roundDiv.appendChild(byeP);
+        round.byes.forEach(i => csvRows.push([round.roundNumber, '-', '-', teams[i].name + ' (BYE)', '']));
+      }
+
+      scheduleContainer.appendChild(roundDiv);
+    });
+
+    lastMatches = csvRows;
+  }
+
+  function generate() {
+    clearError();
+    try {
+      const teams = buildTeams();
+      const courts = parseInt(document.getElementById('courts').value, 10);
+      if (!courts || courts < 1) throw new Error('Enter at least 1 court.');
+      let desiredRounds = null;
+      if (roundsMode.value === 'custom') {
+        desiredRounds = parseInt(document.getElementById('customRounds').value, 10);
+        if (!desiredRounds || desiredRounds < 1) throw new Error('Enter a valid number of rounds.');
+      }
+      const displayRounds = generateSchedule(teams, courts, desiredRounds);
+      renderTeamsSummary(teams);
+      renderSchedule(displayRounds, teams);
+      results.style.display = 'block';
+    } catch (e) {
+      showError(e.message);
+    }
+  }
+
+  document.getElementById('generateBtn').addEventListener('click', generate);
+  document.getElementById('regenBtn').addEventListener('click', generate);
+
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+  document.getElementById('csvBtn').addEventListener('click', () => {
+    if (!lastMatches) return;
+    const csv = lastMatches.map(row => row.map(cell => {
+      const s = String(cell);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pickleball-mixer-schedule.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+})();
+</script>
+</body>
+</html>
