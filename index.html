@@ -31,16 +31,10 @@
     padding: 24px 16px 80px;
   }
   .wrap { max-width: 900px; margin: 0 auto; }
-  h1 {
-    font-size: 1.7rem;
-    margin: 0 0 4px;
-    color: var(--ocean-dark);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .title-icon { width: 42px; height: 26px; flex-shrink: 0; }
-  .sub { color: var(--muted); margin: 0 0 24px; font-size: 0.95rem; }
+  .logo-wrap { text-align: center; margin-bottom: 16px; padding: 16px; }
+  .logo-img { max-width: 200px; width: 100%; height: auto; border-radius: 10px; }
+  .sub-card { text-align: center; }
+  .sub { color: var(--muted); margin: 0; font-size: 0.95rem; }
   .card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -296,7 +290,7 @@
     cursor: pointer;
   }
   @media print {
-    .card.input-card, .card#buildTeamsCard, .card#settingsCard, .actions, h1 + .sub,
+    .card.input-card, .card#buildTeamsCard, .card#settingsCard, .actions, .sub-card,
     .lock-badge, .round-complete, .active-teams-panel button, .dropped-teams { display: none !important; }
     .round-body { display: block !important; }
     .round.locked .round-header { background: linear-gradient(90deg, var(--ocean) 0%, var(--ocean-light) 140%) !important; color: #fff !important; }
@@ -307,21 +301,12 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>
-    <svg class="title-icon" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <rect x="42" y="38" width="10" height="20" rx="4" fill="#0d5f72"/>
-      <rect x="18" y="4" width="38" height="46" rx="16" fill="#ff6f59" stroke="#e6543f" stroke-width="2"/>
-      <circle cx="78" cy="40" r="14" fill="#f4e04d" stroke="#c9b400" stroke-width="1.5"/>
-      <circle cx="72" cy="34" r="1.6" fill="#c9b400"/>
-      <circle cx="82" cy="33" r="1.6" fill="#c9b400"/>
-      <circle cx="86" cy="41" r="1.6" fill="#c9b400"/>
-      <circle cx="78" cy="47" r="1.6" fill="#c9b400"/>
-      <circle cx="70" cy="44" r="1.6" fill="#c9b400"/>
-      <circle cx="78" cy="40" r="1.6" fill="#c9b400"/>
-    </svg>
-    Pickleball Team Mixer
-  </h1>
-  <p class="sub">Fixed teams with rotating opponents, or a fully random individual mixer — build a court schedule for your event.</p>
+  <div class="card logo-wrap">
+    <img class="logo-img" src="assets/mxd-pb-logo.svg" alt="Mixed Pickleball logo">
+  </div>
+  <div class="card sub-card">
+    <p class="sub">Fixed teams with rotating opponents, or a fully random individual mixer — build a court schedule for your event.</p>
+  </div>
 
   <div id="error"></div>
 
