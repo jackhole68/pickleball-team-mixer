@@ -6,20 +6,26 @@
 <title>Pickleball Team Mixer</title>
 <style>
   :root {
-    --green: #1f7a4d;
-    --green-dark: #145c39;
-    --yellow: #d9c400;
-    --bg: #f7f8f5;
-    --card: #ffffff;
-    --border: #dde3dc;
-    --text: #1e2a22;
-    --muted: #66756c;
+    --ocean: #1789a0;
+    --ocean-dark: #0d5f72;
+    --ocean-light: #6fc4d6;
+    --coral: #ff6f59;
+    --coral-dark: #e6543f;
+    --sun: #ffb84d;
+    --seafoam: #bfe8d4;
+    --seafoam-dark: #2f8f6d;
+    --sand: #f3e3c3;
+    --sand-light: #fbf3e1;
+    --card: #fffdf7;
+    --border: #ecdcb8;
+    --text: #234249;
+    --muted: #74898c;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: var(--bg);
+    background: linear-gradient(180deg, #eaf7f8 0%, var(--sand-light) 45%);
     color: var(--text);
     padding: 24px 16px 80px;
   }
@@ -27,16 +33,16 @@
   h1 {
     font-size: 1.7rem;
     margin: 0 0 4px;
-    color: var(--green-dark);
+    color: var(--ocean-dark);
   }
   .sub { color: var(--muted); margin: 0 0 24px; font-size: 0.95rem; }
   .card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px rgba(23, 137, 160, 0.08);
   }
   label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
   .hint { color: var(--muted); font-size: 0.82rem; margin: -2px 0 8px; }
@@ -50,6 +56,11 @@
     background: #fff;
     color: var(--text);
   }
+  textarea:focus, input:focus, select:focus {
+    outline: none;
+    border-color: var(--ocean-light);
+    box-shadow: 0 0 0 3px rgba(111, 196, 214, 0.3);
+  }
   textarea { min-height: 140px; resize: vertical; }
   .row { display: flex; gap: 16px; flex-wrap: wrap; }
   .row > div { flex: 1; min-width: 160px; }
@@ -60,7 +71,7 @@
   .checkbox { display: flex; align-items: center; gap: 8px; font-weight: 500; }
   .checkbox input { margin: 0; }
   button {
-    background: var(--green);
+    background: var(--coral);
     color: #fff;
     border: none;
     padding: 12px 22px;
@@ -68,14 +79,16 @@
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(255, 111, 89, 0.35);
   }
-  button:hover { background: var(--green-dark); }
+  button:hover { background: var(--coral-dark); }
   button.secondary {
     background: #fff;
-    color: var(--green-dark);
-    border: 1px solid var(--green);
+    color: var(--ocean-dark);
+    border: 1px solid var(--ocean);
+    box-shadow: none;
   }
-  button.secondary:hover { background: #eef7f1; }
+  button.secondary:hover { background: #eaf7f8; }
   .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
   #error {
     color: #a12626;
@@ -88,14 +101,53 @@
     font-size: 0.9rem;
   }
   .round {
-    margin-bottom: 22px;
+    margin-bottom: 18px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(23, 137, 160, 0.06);
+    transition: opacity 0.25s ease;
   }
-  .round h2 {
-    font-size: 1.1rem;
-    color: var(--green-dark);
-    border-bottom: 2px solid var(--yellow);
-    padding-bottom: 6px;
-    margin-bottom: 10px;
+  .round-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 14px 18px;
+    background: linear-gradient(90deg, var(--ocean) 0%, var(--ocean-light) 140%);
+    color: #fff;
+  }
+  .round-header h2 {
+    font-size: 1.05rem;
+    margin: 0;
+    font-weight: 700;
+  }
+  .lock-badge {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.25);
+    white-space: nowrap;
+  }
+  .round.complete .round-header {
+    background: linear-gradient(90deg, var(--seafoam-dark) 0%, var(--seafoam) 140%);
+  }
+  .round.locked .round-header {
+    background: #cdd7d6;
+    color: #55625f;
+  }
+  .round.locked .lock-badge {
+    background: rgba(0,0,0,0.08);
+    color: #55625f;
+  }
+  .round-body { padding: 16px 18px 18px; }
+  .round-locked-msg {
+    padding: 18px;
+    color: var(--muted);
+    font-style: italic;
+    font-size: 0.9rem;
   }
   table {
     width: 100%;
@@ -108,11 +160,39 @@
     border-bottom: 1px solid var(--border);
   }
   th { color: var(--muted); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .heat-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ocean-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin: 14px 0 6px;
+  }
+  .heat-label:first-child { margin-top: 0; }
   .bye {
     color: var(--muted);
     font-style: italic;
     font-size: 0.88rem;
-    margin-top: 6px;
+    margin-top: 10px;
+  }
+  .round-complete {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: var(--sand);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .round-complete input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--seafoam-dark);
+    cursor: pointer;
   }
   .teams-summary {
     display: flex;
@@ -121,18 +201,21 @@
     margin-top: 10px;
   }
   .team-chip {
-    background: #eef7f1;
-    border: 1px solid #cfe8da;
-    color: var(--green-dark);
+    background: var(--seafoam);
+    border: 1px solid var(--seafoam-dark);
+    color: var(--ocean-dark);
     padding: 4px 10px;
     border-radius: 999px;
     font-size: 0.85rem;
+    font-weight: 600;
   }
   #results { display: none; }
   @media print {
-    .card.input-card, .actions, h1 + .sub { display: none !important; }
+    .card.input-card, .actions, h1 + .sub, .lock-badge, .round-complete { display: none !important; }
+    .round-body { display: block !important; }
+    .round.locked .round-header { background: linear-gradient(90deg, var(--ocean) 0%, var(--ocean-light) 140%) !important; color: #fff !important; }
     body { padding: 0; background: #fff; }
-    .round { break-inside: avoid; }
+    .round { break-inside: avoid; box-shadow: none; }
   }
 </style>
 </head>
@@ -218,6 +301,7 @@
   const scheduleContainer = document.getElementById('scheduleContainer');
 
   let lastMatches = null; // cached for CSV export
+  let roundStates = [];   // true = marked complete
 
   modeRadios.forEach(r => r.addEventListener('change', () => {
     const mode = document.querySelector('input[name="mode"]:checked').value;
@@ -358,21 +442,57 @@
     });
   }
 
+  function updateRoundVisibility() {
+    const roundEls = scheduleContainer.querySelectorAll('.round');
+    roundEls.forEach((roundDiv, idx) => {
+      const unlocked = idx === 0 || roundStates[idx - 1];
+      const complete = !!roundStates[idx];
+      const body = roundDiv.querySelector('.round-body');
+      const lockedMsg = roundDiv.querySelector('.round-locked-msg');
+      const badge = roundDiv.querySelector('.lock-badge');
+
+      roundDiv.classList.toggle('locked', !unlocked);
+      roundDiv.classList.toggle('complete', complete);
+
+      if (body) body.style.display = unlocked ? 'block' : 'none';
+      if (lockedMsg) lockedMsg.style.display = unlocked ? 'none' : 'block';
+
+      if (badge) {
+        badge.textContent = complete ? '✅ Complete' : (unlocked ? '▶ In progress' : '🔒 Locked');
+      }
+    });
+  }
+
   function renderSchedule(displayRounds, teams) {
     scheduleContainer.innerHTML = '';
     const csvRows = [['Round', 'Heat', 'Court', 'Team A', 'Team B']];
+    roundStates = displayRounds.map(() => false);
 
     displayRounds.forEach(round => {
       const roundDiv = document.createElement('div');
       roundDiv.className = 'round';
-      const totalHeats = round.heats.length;
 
+      const header = document.createElement('div');
+      header.className = 'round-header';
+      header.innerHTML = `<h2>Round ${round.roundNumber}</h2><span class="lock-badge">🔒 Locked</span>`;
+      roundDiv.appendChild(header);
+
+      const lockedMsg = document.createElement('div');
+      lockedMsg.className = 'round-locked-msg';
+      lockedMsg.textContent = `Complete Round ${round.roundNumber - 1} to unlock this round.`;
+      roundDiv.appendChild(lockedMsg);
+
+      const body = document.createElement('div');
+      body.className = 'round-body';
+
+      const totalHeats = round.heats.length;
       round.heats.forEach((heat, heatIdx) => {
-        const heading = document.createElement('h2');
-        heading.textContent = totalHeats > 1
-          ? `Round ${round.roundNumber} — Heat ${heatIdx + 1} of ${totalHeats}`
-          : `Round ${round.roundNumber}`;
-        roundDiv.appendChild(heading);
+        if (totalHeats > 1) {
+          const heatLabel = document.createElement('div');
+          heatLabel.className = 'heat-label';
+          heatLabel.textContent = `Heat ${heatIdx + 1} of ${totalHeats}`;
+          body.appendChild(heatLabel);
+        }
 
         const table = document.createElement('table');
         table.innerHTML = '<thead><tr><th>Court</th><th>Team A</th><th>Team B</th></tr></thead>';
@@ -386,20 +506,48 @@
           csvRows.push([round.roundNumber, heatIdx + 1, i + 1, teamA, teamB]);
         });
         table.appendChild(tbody);
-        roundDiv.appendChild(table);
+        body.appendChild(table);
       });
 
       if (round.byes.length) {
         const byeP = document.createElement('p');
         byeP.className = 'bye';
         byeP.textContent = 'Bye: ' + round.byes.map(i => teams[i].name).join(', ');
-        roundDiv.appendChild(byeP);
+        body.appendChild(byeP);
         round.byes.forEach(i => csvRows.push([round.roundNumber, '-', '-', teams[i].name + ' (BYE)', '']));
       }
 
+      const completeLabel = document.createElement('label');
+      completeLabel.className = 'round-complete';
+      const idx = round.roundNumber - 1;
+      completeLabel.innerHTML = `<input type="checkbox" data-round="${idx}"> Mark Round ${round.roundNumber} complete${idx < displayRounds.length - 1 ? ' — unlock next round' : ''}`;
+      body.appendChild(completeLabel);
+
+      roundDiv.appendChild(body);
       scheduleContainer.appendChild(roundDiv);
     });
 
+    scheduleContainer.querySelectorAll('input[type=checkbox][data-round]').forEach(cb => {
+      cb.addEventListener('change', e => {
+        const idx = parseInt(e.target.dataset.round, 10);
+        roundStates[idx] = e.target.checked;
+        if (!e.target.checked) {
+          for (let j = idx + 1; j < roundStates.length; j++) {
+            roundStates[j] = false;
+            const laterCb = scheduleContainer.querySelector(`input[data-round="${j}"]`);
+            if (laterCb) laterCb.checked = false;
+          }
+        }
+        updateRoundVisibility();
+        if (e.target.checked) {
+          const rounds = scheduleContainer.querySelectorAll('.round');
+          const nextRound = rounds[idx + 1];
+          if (nextRound) nextRound.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    updateRoundVisibility();
     lastMatches = csvRows;
   }
 
