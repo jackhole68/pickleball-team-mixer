@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pickleball Team Mixer</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Crect x='42' y='38' width='10' height='20' rx='4' fill='%230d5f72'/%3E%3Crect x='18' y='4' width='38' height='46' rx='16' fill='%23ff6f59' stroke='%23e6543f' stroke-width='2'/%3E%3Ccircle cx='78' cy='40' r='14' fill='%23f4e04d' stroke='%23c9b400' stroke-width='1.5'/%3E%3Ccircle cx='72' cy='34' r='1.6' fill='%23c9b400'/%3E%3Ccircle cx='82' cy='33' r='1.6' fill='%23c9b400'/%3E%3Ccircle cx='86' cy='41' r='1.6' fill='%23c9b400'/%3E%3Ccircle cx='78' cy='47' r='1.6' fill='%23c9b400'/%3E%3Ccircle cx='70' cy='44' r='1.6' fill='%23c9b400'/%3E%3Ccircle cx='78' cy='40' r='1.6' fill='%23c9b400'/%3E%3C/svg%3E">
 <style>
   :root {
     --ocean: #1789a0;
@@ -34,7 +35,11 @@
     font-size: 1.7rem;
     margin: 0 0 4px;
     color: var(--ocean-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
+  .title-icon { width: 42px; height: 26px; flex-shrink: 0; }
   .sub { color: var(--muted); margin: 0 0 24px; font-size: 0.95rem; }
   .card {
     background: var(--card);
@@ -138,7 +143,14 @@
   }
   .edit-team-row input[type=text] { flex: 1; min-width: 120px; }
   .edit-team-row .amp { color: var(--muted); font-weight: 700; }
-  .edit-team-row .remove-team {
+  .edit-player-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .edit-player-row input[type=text] { flex: 1; }
+  .remove-team {
     background: #fff;
     color: var(--coral-dark);
     border: 1px solid var(--coral);
@@ -146,7 +158,7 @@
     padding: 8px 12px;
     font-size: 0.85rem;
   }
-  .edit-team-row .remove-team:hover { background: #fff1ee; }
+  .remove-team:hover { background: #fff1ee; }
   #resultsSection { display: none; }
   .active-teams-panel {
     display: flex;
@@ -295,8 +307,21 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>🏓 Pickleball Team Mixer</h1>
-  <p class="sub">Fixed partners, rotating opponents — build a round-robin court schedule for your event.</p>
+  <h1>
+    <svg class="title-icon" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="42" y="38" width="10" height="20" rx="4" fill="#0d5f72"/>
+      <rect x="18" y="4" width="38" height="46" rx="16" fill="#ff6f59" stroke="#e6543f" stroke-width="2"/>
+      <circle cx="78" cy="40" r="14" fill="#f4e04d" stroke="#c9b400" stroke-width="1.5"/>
+      <circle cx="72" cy="34" r="1.6" fill="#c9b400"/>
+      <circle cx="82" cy="33" r="1.6" fill="#c9b400"/>
+      <circle cx="86" cy="41" r="1.6" fill="#c9b400"/>
+      <circle cx="78" cy="47" r="1.6" fill="#c9b400"/>
+      <circle cx="70" cy="44" r="1.6" fill="#c9b400"/>
+      <circle cx="78" cy="40" r="1.6" fill="#c9b400"/>
+    </svg>
+    Pickleball Team Mixer
+  </h1>
+  <p class="sub">Fixed teams with rotating opponents, or a fully random individual mixer — build a court schedule for your event.</p>
 
   <div id="error"></div>
 
@@ -306,19 +331,15 @@
     <div class="field">
       <label>How are you entering players?</label>
       <div class="radio-group">
-        <label><input type="radio" name="mode" value="individual" checked> Individual players (I'll auto-pair them into teams)</label>
-        <label><input type="radio" name="mode" value="teams"> Already-formed teams</label>
+        <label><input type="radio" name="mode" value="individual" checked> Individual mixer (new partners &amp; opponents every round)</label>
+        <label><input type="radio" name="mode" value="teams"> Already-formed teams (fixed partners, rotating opponents)</label>
       </div>
     </div>
 
     <div class="field" id="individualField">
-      <label for="players">Player names (one per line, even number)</label>
-      <div class="hint">They'll be paired in the order listed, unless you check "shuffle" below.</div>
+      <label for="players">Player names (one per line, at least 4)</label>
+      <div class="hint">Each round, players are randomly split into new doubles matchups — nobody keeps the same partner or opponents for long.</div>
       <textarea id="players" placeholder="Alex&#10;Jamie&#10;Sam&#10;Taylor&#10;Jordan&#10;Casey&#10;Morgan&#10;Riley"></textarea>
-      <div class="checkbox" style="margin-top:8px;">
-        <input type="checkbox" id="shuffle" checked>
-        <label for="shuffle" style="margin:0;">Shuffle before pairing (random partners)</label>
-      </div>
     </div>
 
     <div class="field" id="teamsField" style="display:none;">
@@ -328,22 +349,38 @@
     </div>
 
     <div class="actions">
-      <button id="buildTeamsBtn">Build Teams →</button>
+      <button id="buildTeamsBtn">Add Players →</button>
     </div>
   </div>
 
   <div class="card" id="buildTeamsCard" style="display:none;">
-    <h3>Step 2 · Review &amp; Edit Teams</h3>
-    <p class="card-hint">Fix a mispaired team, rename a player, add or remove a team. Rebuilding from Step 1 will replace this list.</p>
-    <div id="editTeamsList"></div>
-    <div class="actions">
-      <button class="secondary small" id="addTeamBtn">+ Add Team</button>
+    <h3 id="step2Heading">Step 2 · Review &amp; Edit Players</h3>
+    <p class="card-hint" id="step2Hint">Fix a typo, add or remove a player. Rebuilding from Step 1 will replace this list.</p>
+
+    <div id="editPlayersSection">
+      <div id="editPlayersList"></div>
+      <div class="actions">
+        <button class="secondary small" id="addPlayerBtn">+ Add Player</button>
+      </div>
+      <div class="saved-row">
+        <select id="savedPlayerLists"></select>
+        <button class="secondary small" id="loadPlayerListBtn">Load</button>
+        <button class="secondary small" id="savePlayerListBtn">Save this list as…</button>
+        <button class="danger small" id="deletePlayerListBtn">Delete</button>
+      </div>
     </div>
-    <div class="saved-row">
-      <select id="savedTeamRosters"></select>
-      <button class="secondary small" id="loadRosterBtn">Load</button>
-      <button class="secondary small" id="saveRosterBtn">Save this roster as…</button>
-      <button class="danger small" id="deleteRosterBtn">Delete</button>
+
+    <div id="editTeamsSection" style="display:none;">
+      <div id="editTeamsList"></div>
+      <div class="actions">
+        <button class="secondary small" id="addTeamBtn">+ Add Team</button>
+      </div>
+      <div class="saved-row">
+        <select id="savedTeamRosters"></select>
+        <button class="secondary small" id="loadRosterBtn">Load</button>
+        <button class="secondary small" id="saveRosterBtn">Save this roster as…</button>
+        <button class="danger small" id="deleteRosterBtn">Delete</button>
+      </div>
     </div>
   </div>
 
@@ -354,7 +391,13 @@
         <label for="courts">Number of courts</label>
         <input type="number" id="courts" min="1" value="2">
       </div>
-      <div class="field">
+
+      <div class="field" id="individualRoundsControls">
+        <label for="individualRounds">Number of rounds</label>
+        <input type="number" id="individualRounds" min="1" value="6">
+      </div>
+
+      <div class="field" id="teamsRoundsControls" style="display:none;">
         <label for="roundsMode">Rounds</label>
         <select id="roundsMode">
           <option value="full">Full round robin (everyone plays everyone once)</option>
@@ -374,7 +417,7 @@
   <div id="resultsSection">
     <div class="card">
       <label style="margin-bottom:2px;">Players in the Mixer</label>
-      <p class="card-hint" style="margin-top:2px;">Someone leaving early? Drop their team — they'll be removed starting next round. Rounds already played or in progress won't change.</p>
+      <p class="card-hint" style="margin-top:2px;">Someone leaving early? Drop them — they'll be removed starting next round. Rounds already played or in progress won't change.</p>
       <div class="active-teams-panel" id="activeTeamsPanel"></div>
       <div class="dropped-teams" id="droppedTeamsWrap" style="display:none;">
         <div class="dropped-teams-label">Dropped from the mixer</div>
@@ -397,13 +440,22 @@
   const teamsField = document.getElementById('teamsField');
   const playersTextarea = document.getElementById('players');
   const teamsTextarea = document.getElementById('teamsInput');
+  const buildTeamsBtn = document.getElementById('buildTeamsBtn');
   const roundsMode = document.getElementById('roundsMode');
   const customRoundsField = document.getElementById('customRoundsField');
   const errorBox = document.getElementById('error');
   const buildTeamsCard = document.getElementById('buildTeamsCard');
-  const settingsCard = document.getElementById('settingsCard');
+  const step2Heading = document.getElementById('step2Heading');
+  const step2Hint = document.getElementById('step2Hint');
+  const editTeamsSection = document.getElementById('editTeamsSection');
+  const editPlayersSection = document.getElementById('editPlayersSection');
   const editTeamsList = document.getElementById('editTeamsList');
+  const editPlayersList = document.getElementById('editPlayersList');
   const savedTeamRostersSelect = document.getElementById('savedTeamRosters');
+  const savedPlayerListsSelect = document.getElementById('savedPlayerLists');
+  const settingsCard = document.getElementById('settingsCard');
+  const teamsRoundsControls = document.getElementById('teamsRoundsControls');
+  const individualRoundsControls = document.getElementById('individualRoundsControls');
   const resultsSection = document.getElementById('resultsSection');
   const activeTeamsPanel = document.getElementById('activeTeamsPanel');
   const droppedTeamsWrap = document.getElementById('droppedTeamsWrap');
@@ -414,7 +466,8 @@
   const LS_KEYS = {
     individualText: 'pbMixer.individualText',
     teamsText: 'pbMixer.teamsText',
-    teamRosters: 'pbMixer.teamRosters' // { name: [{a,b}, ...] }
+    teamRosters: 'pbMixer.teamRosters',   // { name: [{a,b}, ...] }
+    playerLists: 'pbMixer.playerLists'    // { name: [name, ...] }
   };
 
   function loadJSON(key, fallback) {
@@ -443,26 +496,43 @@
       ? names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')
       : '<option value="">No saved rosters yet</option>';
   }
+
+  function getPlayerLists() { return loadJSON(LS_KEYS.playerLists, {}); }
+  function setPlayerLists(obj) { saveJSON(LS_KEYS.playerLists, obj); }
+  function refreshPlayerListDropdown() {
+    const lists = getPlayerLists();
+    const names = Object.keys(lists).sort();
+    savedPlayerListsSelect.innerHTML = names.length
+      ? names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')
+      : '<option value="">No saved lists yet</option>';
+  }
+
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
   // ---------- state ----------
-  let editTeams = [];      // [{id, a, b}]
+  let mixerMode = 'individual'; // 'individual' | 'teams' — which flow Step 2/3 currently reflect
+  let editTeams = [];    // [{id, a, b}]
+  let editPlayers = [];  // [{id, name}]
   let nextEditId = 1;
-  let eventTeams = [];     // [{id, name, active}] snapshot used for the live mixer
-  let displayRounds = [];  // [{roundNumber, heats:[[{a:{id,name},b:{id,name}}...]], byes:[{id,name}]}]
-  let roundStates = [];    // booleans, parallel to displayRounds
-  let roundsSettingValue = 'full';
+  let eventTeams = [];    // [{id, name, active}] — teams-mode roster for the live mixer
+  let eventPlayers = [];  // [{id, name, active}] — individual-mode roster for the live mixer
+  let displayRounds = []; // [{roundNumber, heats:[[{a:{name},b:{name}}...]], byes:[{name}]}]
+  let roundStates = [];   // booleans, parallel to displayRounds
+  let roundsSettingValue = 'full'; // 'full' | 'custom' (teams mode only; individual mode always acts like 'custom')
   let desiredRoundsTotal = null;
   let courtsValue = 2;
 
-  // ---------- mode / rounds toggles ----------
-  modeRadios.forEach(r => r.addEventListener('change', () => {
+  // ---------- mode toggles ----------
+  function applyModeUI() {
     const mode = document.querySelector('input[name="mode"]:checked').value;
     individualField.style.display = mode === 'individual' ? 'block' : 'none';
     teamsField.style.display = mode === 'teams' ? 'block' : 'none';
-  }));
+    buildTeamsBtn.textContent = mode === 'individual' ? 'Add Players →' : 'Build Teams →';
+  }
+  modeRadios.forEach(r => r.addEventListener('change', applyModeUI));
+  applyModeUI();
 
   roundsMode.addEventListener('change', () => {
     customRoundsField.style.display = roundsMode.value === 'custom' ? 'block' : 'none';
@@ -486,43 +556,28 @@
     return a;
   }
 
-  // ---------- Step 1 → Step 2: build editable team list ----------
-  function parsePlayers() {
-    return playersTextarea.value.split('\n').map(s => s.trim()).filter(Boolean);
+  // ---------- Step 1 parsing ----------
+  function parsePlayersOnly() {
+    const players = playersTextarea.value.split('\n').map(s => s.trim()).filter(Boolean);
+    if (players.length < 4) throw new Error('Enter at least 4 players.');
+    return players;
   }
-  function parseTeamsInput() {
-    return teamsTextarea.value.split('\n').map(s => s.trim()).filter(Boolean).map(line => {
+  function parseTeamsInputPairs() {
+    const pairs = teamsTextarea.value.split('\n').map(s => s.trim()).filter(Boolean).map(line => {
       const parts = line.split(/\s*[\/,&]\s*|\s+and\s+/i).map(s => s.trim()).filter(Boolean);
       if (parts.length < 2) return null;
       return { a: parts[0], b: parts[1] };
     });
+    if (pairs.some(p => p === null)) throw new Error('Each team line needs two names separated by "/", ",", "&", or "and".');
+    if (pairs.length < 2) throw new Error('Enter at least 2 teams.');
+    return pairs;
   }
 
-  function buildPairsFromSource() {
-    const mode = document.querySelector('input[name="mode"]:checked').value;
-    if (mode === 'individual') {
-      let players = parsePlayers();
-      if (players.length < 4) throw new Error('Enter at least 4 players.');
-      if (players.length % 2 !== 0) throw new Error('Enter an even number of players so everyone gets a partner.');
-      if (document.getElementById('shuffle').checked) players = shuffleArray(players);
-      const pairs = [];
-      for (let i = 0; i < players.length; i += 2) pairs.push({ a: players[i], b: players[i + 1] });
-      return pairs;
-    } else {
-      const pairs = parseTeamsInput();
-      if (pairs.some(p => p === null)) throw new Error('Each team line needs two names separated by "/", ",", "&", or "and".');
-      if (pairs.length < 2) throw new Error('Enter at least 2 teams.');
-      return pairs;
-    }
-  }
-
+  // ---------- Step 2: editable lists ----------
   function setEditTeams(pairs) {
     editTeams = pairs.map(p => ({ id: nextEditId++, a: p.a, b: p.b }));
     renderEditTeams();
-    buildTeamsCard.style.display = 'block';
-    settingsCard.style.display = 'block';
   }
-
   function renderEditTeams() {
     editTeamsList.innerHTML = '';
     editTeams.forEach(team => {
@@ -536,7 +591,6 @@
       `;
       editTeamsList.appendChild(row);
     });
-
     editTeamsList.querySelectorAll('input[type=text]').forEach(inp => {
       inp.addEventListener('input', () => {
         const id = parseInt(inp.dataset.id, 10);
@@ -554,11 +608,65 @@
     });
   }
 
-  document.getElementById('buildTeamsBtn').addEventListener('click', () => {
+  function setEditPlayers(names) {
+    editPlayers = names.map(n => ({ id: nextEditId++, name: n }));
+    renderEditPlayers();
+  }
+  function renderEditPlayers() {
+    editPlayersList.innerHTML = '';
+    editPlayers.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'edit-player-row';
+      row.innerHTML = `
+        <input type="text" value="${escapeHtml(p.name)}" data-id="${p.id}" placeholder="Player name">
+        <button class="remove-team" type="button" data-id="${p.id}">✕ Remove</button>
+      `;
+      editPlayersList.appendChild(row);
+    });
+    editPlayersList.querySelectorAll('input[type=text]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const id = parseInt(inp.dataset.id, 10);
+        const p = editPlayers.find(x => x.id === id);
+        if (p) p.name = inp.value;
+      });
+    });
+    editPlayersList.querySelectorAll('.remove-team').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.dataset.id, 10);
+        editPlayers = editPlayers.filter(p => p.id !== id);
+        renderEditPlayers();
+      });
+    });
+  }
+
+  buildTeamsBtn.addEventListener('click', () => {
     clearError();
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+    mixerMode = mode;
     try {
-      const pairs = buildPairsFromSource();
-      setEditTeams(pairs);
+      if (mode === 'individual') {
+        const names = parsePlayersOnly();
+        setEditPlayers(names);
+        editPlayersSection.style.display = 'block';
+        editTeamsSection.style.display = 'none';
+        individualRoundsControls.style.display = 'block';
+        teamsRoundsControls.style.display = 'none';
+        customRoundsField.style.display = 'none';
+        step2Heading.textContent = 'Step 2 · Review & Edit Players';
+        step2Hint.textContent = 'Fix a typo, add or remove a player. Rebuilding from Step 1 will replace this list.';
+      } else {
+        const pairs = parseTeamsInputPairs();
+        setEditTeams(pairs);
+        editTeamsSection.style.display = 'block';
+        editPlayersSection.style.display = 'none';
+        teamsRoundsControls.style.display = 'block';
+        individualRoundsControls.style.display = 'none';
+        customRoundsField.style.display = roundsMode.value === 'custom' ? 'block' : 'none';
+        step2Heading.textContent = 'Step 2 · Review & Edit Teams';
+        step2Hint.textContent = 'Fix a mispaired team, rename a player, add or remove a team. Rebuilding from Step 1 will replace this list.';
+      }
+      buildTeamsCard.style.display = 'block';
+      settingsCard.style.display = 'block';
       buildTeamsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (e) {
       showError(e.message);
@@ -568,6 +676,10 @@
   document.getElementById('addTeamBtn').addEventListener('click', () => {
     editTeams.push({ id: nextEditId++, a: '', b: '' });
     renderEditTeams();
+  });
+  document.getElementById('addPlayerBtn').addEventListener('click', () => {
+    editPlayers.push({ id: nextEditId++, name: '' });
+    renderEditPlayers();
   });
 
   // ---------- saved team rosters ----------
@@ -584,14 +696,12 @@
     refreshRosterDropdown();
     savedTeamRostersSelect.value = name.trim();
   });
-
   document.getElementById('loadRosterBtn').addEventListener('click', () => {
     const name = savedTeamRostersSelect.value;
     const rosters = getTeamRosters();
     if (!name || !rosters[name]) return;
     setEditTeams(rosters[name]);
   });
-
   document.getElementById('deleteRosterBtn').addEventListener('click', () => {
     const name = savedTeamRostersSelect.value;
     if (!name) return;
@@ -602,7 +712,37 @@
     refreshRosterDropdown();
   });
 
-  // ---------- round-robin core ----------
+  // ---------- saved player lists ----------
+  refreshPlayerListDropdown();
+
+  document.getElementById('savePlayerListBtn').addEventListener('click', () => {
+    const valid = editPlayers.filter(p => p.name.trim());
+    if (valid.length < 4) { showError('Add at least 4 players before saving a list.'); return; }
+    const name = prompt('Save this player list as:');
+    if (!name) return;
+    const lists = getPlayerLists();
+    lists[name.trim()] = valid.map(p => p.name.trim());
+    setPlayerLists(lists);
+    refreshPlayerListDropdown();
+    savedPlayerListsSelect.value = name.trim();
+  });
+  document.getElementById('loadPlayerListBtn').addEventListener('click', () => {
+    const name = savedPlayerListsSelect.value;
+    const lists = getPlayerLists();
+    if (!name || !lists[name]) return;
+    setEditPlayers(lists[name]);
+  });
+  document.getElementById('deletePlayerListBtn').addEventListener('click', () => {
+    const name = savedPlayerListsSelect.value;
+    if (!name) return;
+    if (!confirm(`Delete the saved list "${name}"? This can't be undone.`)) return;
+    const lists = getPlayerLists();
+    delete lists[name];
+    setPlayerLists(lists);
+    refreshPlayerListDropdown();
+  });
+
+  // ---------- fixed-partner round-robin (teams mode) ----------
   function roundRobinIndexRounds(n) {
     const teams = [...Array(n).keys()];
     const hasBye = n % 2 !== 0;
@@ -655,6 +795,31 @@
     return rounds;
   }
 
+  // ---------- fully random individual mixer ----------
+  // playerObjs: [{id, name}] — every round, partners AND opponents are reshuffled from scratch
+  function buildRandomRounds(playerObjs, courts, numRounds, startRoundNumber) {
+    const rounds = [];
+    for (let i = 0; i < numRounds; i++) {
+      const shuffled = shuffleArray(playerObjs);
+      const numGroups = Math.floor(shuffled.length / 4);
+      const playing = shuffled.slice(0, numGroups * 4);
+      const sitting = shuffled.slice(numGroups * 4);
+      const matches = [];
+      for (let g = 0; g < numGroups; g++) {
+        const four = playing.slice(g * 4, g * 4 + 4);
+        matches.push({
+          a: { name: `${four[0].name} & ${four[1].name}` },
+          b: { name: `${four[2].name} & ${four[3].name}` }
+        });
+      }
+      const heats = [];
+      for (let k = 0; k < matches.length; k += courts) heats.push(matches.slice(k, k + courts));
+      if (heats.length === 0) heats.push([]);
+      rounds.push({ roundNumber: startRoundNumber + i, heats, byes: sitting.map(p => ({ name: p.name })) });
+    }
+    return rounds;
+  }
+
   // ---------- Step 3: generate schedule ----------
   document.getElementById('generateBtn').addEventListener('click', () => {
     clearError();
@@ -662,22 +827,36 @@
       if (!confirm('This starts a brand-new mixer and replaces the one in progress (including round history). Continue?')) return;
     }
     try {
-      const valid = editTeams.filter(t => t.a.trim() && t.b.trim());
-      if (valid.length < 2) throw new Error('You need at least 2 complete teams to generate a schedule.');
       courtsValue = parseInt(document.getElementById('courts').value, 10);
       if (!courtsValue || courtsValue < 1) throw new Error('Enter at least 1 court.');
-      roundsSettingValue = roundsMode.value;
-      desiredRoundsTotal = null;
-      if (roundsSettingValue === 'custom') {
-        desiredRoundsTotal = parseInt(document.getElementById('customRounds').value, 10);
+
+      if (mixerMode === 'individual') {
+        const valid = editPlayers.filter(p => p.name.trim());
+        if (valid.length < 4) throw new Error('You need at least 4 players to generate a schedule.');
+        desiredRoundsTotal = parseInt(document.getElementById('individualRounds').value, 10);
         if (!desiredRoundsTotal || desiredRoundsTotal < 1) throw new Error('Enter a valid number of rounds.');
+        roundsSettingValue = 'custom';
+
+        eventPlayers = valid.map(p => ({ id: p.id, name: p.name.trim(), active: true }));
+        eventTeams = [];
+        displayRounds = buildRandomRounds(eventPlayers, courtsValue, desiredRoundsTotal, 1);
+      } else {
+        const valid = editTeams.filter(t => t.a.trim() && t.b.trim());
+        if (valid.length < 2) throw new Error('You need at least 2 complete teams to generate a schedule.');
+        roundsSettingValue = roundsMode.value;
+        desiredRoundsTotal = null;
+        if (roundsSettingValue === 'custom') {
+          desiredRoundsTotal = parseInt(document.getElementById('customRounds').value, 10);
+          if (!desiredRoundsTotal || desiredRoundsTotal < 1) throw new Error('Enter a valid number of rounds.');
+        }
+
+        eventTeams = valid.map(t => ({ id: t.id, name: `${t.a.trim()} & ${t.b.trim()}`, active: true }));
+        eventPlayers = [];
+        displayRounds = buildDisplayRounds(eventTeams, courtsValue, desiredRoundsTotal, 1);
       }
 
-      eventTeams = valid.map(t => ({ id: t.id, name: `${t.a.trim()} & ${t.b.trim()}`, active: true }));
-      displayRounds = buildDisplayRounds(eventTeams, courtsValue, desiredRoundsTotal, 1);
       roundStates = displayRounds.map(() => false);
-
-      renderActiveTeamsPanel();
+      renderActiveParticipantsPanel();
       renderRounds();
       resultsSection.style.display = 'block';
       resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -686,51 +865,58 @@
     }
   });
 
-  // ---------- active teams / drop mid-event ----------
-  function renderActiveTeamsPanel() {
+  // ---------- active participants / drop mid-event ----------
+  function renderActiveParticipantsPanel() {
+    const list = mixerMode === 'individual' ? eventPlayers : eventTeams;
     activeTeamsPanel.innerHTML = '';
-    eventTeams.filter(t => t.active).forEach(team => {
+    list.filter(p => p.active).forEach(p => {
       const chip = document.createElement('span');
       chip.className = 'active-team-chip';
-      chip.innerHTML = `${escapeHtml(team.name)} <button type="button" data-id="${team.id}">✕ Drop</button>`;
+      chip.innerHTML = `${escapeHtml(p.name)} <button type="button" data-id="${p.id}">✕ Drop</button>`;
       activeTeamsPanel.appendChild(chip);
     });
     activeTeamsPanel.querySelectorAll('button[data-id]').forEach(btn => {
-      btn.addEventListener('click', () => dropTeam(parseInt(btn.dataset.id, 10)));
+      btn.addEventListener('click', () => dropParticipant(parseInt(btn.dataset.id, 10)));
     });
 
-    const dropped = eventTeams.filter(t => !t.active);
+    const dropped = list.filter(p => !p.active);
     droppedTeamsWrap.style.display = dropped.length ? 'block' : 'none';
-    droppedTeamsList.innerHTML = dropped.map(t => `<span class="dropped-team-chip">${escapeHtml(t.name)}</span>`).join('');
+    droppedTeamsList.innerHTML = dropped.map(p => `<span class="dropped-team-chip">${escapeHtml(p.name)}</span>`).join('');
   }
 
-  function dropTeam(id) {
-    const team = eventTeams.find(t => t.id === id && t.active);
-    if (!team) return;
-    if (!confirm(`Remove ${team.name} from the mixer? They'll be gone starting next round — rounds already played or in progress stay as-is.`)) return;
+  function dropParticipant(id) {
+    const list = mixerMode === 'individual' ? eventPlayers : eventTeams;
+    const participant = list.find(p => p.id === id && p.active);
+    if (!participant) return;
+    if (!confirm(`Remove ${participant.name} from the mixer? They'll be gone starting next round — rounds already played or in progress stay as-is.`)) return;
 
-    team.active = false;
+    participant.active = false;
 
     let completedCount = 0;
     while (completedCount < roundStates.length && roundStates[completedCount]) completedCount++;
     const frozenCount = Math.min(completedCount + 1, displayRounds.length);
-
     const frozenRounds = displayRounds.slice(0, frozenCount);
-    const activeTeamObjs = eventTeams.filter(t => t.active).map(t => ({ id: t.id, name: t.name }));
 
-    let futureCount = null;
-    if (roundsSettingValue === 'custom') {
-      futureCount = Math.max((desiredRoundsTotal || 0) - frozenCount, 0);
+    let newFutureRounds;
+    if (mixerMode === 'individual') {
+      const activePlayerObjs = eventPlayers.filter(p => p.active).map(p => ({ id: p.id, name: p.name }));
+      const futureCount = Math.max((desiredRoundsTotal || 0) - frozenCount, 0);
+      newFutureRounds = activePlayerObjs.length >= 4
+        ? buildRandomRounds(activePlayerObjs, courtsValue, futureCount, frozenCount + 1)
+        : [];
+    } else {
+      const activeTeamObjs = eventTeams.filter(t => t.active).map(t => ({ id: t.id, name: t.name }));
+      let futureCount = null;
+      if (roundsSettingValue === 'custom') futureCount = Math.max((desiredRoundsTotal || 0) - frozenCount, 0);
+      newFutureRounds = activeTeamObjs.length >= 2
+        ? buildDisplayRounds(activeTeamObjs, courtsValue, futureCount, frozenCount + 1)
+        : [];
     }
-
-    const newFutureRounds = activeTeamObjs.length >= 2
-      ? buildDisplayRounds(activeTeamObjs, courtsValue, futureCount, frozenCount + 1)
-      : [];
 
     displayRounds = frozenRounds.concat(newFutureRounds);
     roundStates = displayRounds.map((_, i) => i < frozenCount ? roundStates[i] : false);
 
-    renderActiveTeamsPanel();
+    renderActiveParticipantsPanel();
     renderRounds();
   }
 
@@ -775,7 +961,7 @@
       if (round.heats.every(h => h.length === 0) && round.byes.length === 0) {
         const emptyMsg = document.createElement('p');
         emptyMsg.className = 'bye';
-        emptyMsg.textContent = 'Not enough teams remaining to schedule this round.';
+        emptyMsg.textContent = 'Not enough players remaining to schedule this round.';
         body.appendChild(emptyMsg);
       } else {
         const totalHeats = round.heats.length;
@@ -801,7 +987,7 @@
         if (round.byes.length) {
           const byeP = document.createElement('p');
           byeP.className = 'bye';
-          byeP.textContent = 'Bye: ' + round.byes.map(t => t.name).join(', ');
+          byeP.textContent = 'Sitting out: ' + round.byes.map(t => t.name).join(', ');
           body.appendChild(byeP);
         }
       }
@@ -851,7 +1037,7 @@
           csvRows.push([round.roundNumber, heatIdx + 1, i + 1, match.a.name, match.b.name]);
         });
       });
-      round.byes.forEach(t => csvRows.push([round.roundNumber, '-', '-', t.name + ' (BYE)', '']));
+      round.byes.forEach(t => csvRows.push([round.roundNumber, '-', '-', t.name + ' (SITTING OUT)', '']));
     });
     const csv = csvRows.map(row => row.map(cell => {
       const s = String(cell);
