@@ -44,9 +44,15 @@
     margin-bottom: 20px;
     box-shadow: 0 2px 8px rgba(23, 137, 160, 0.08);
   }
+  .card h3 {
+    margin: 0 0 4px;
+    color: var(--ocean-dark);
+    font-size: 1.05rem;
+  }
+  .card-hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 14px; }
   label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
   .hint { color: var(--muted); font-size: 0.82rem; margin: -2px 0 8px; }
-  textarea, input[type=number], select {
+  textarea, input[type=number], input[type=text], select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--border);
@@ -89,6 +95,19 @@
     box-shadow: none;
   }
   button.secondary:hover { background: #eaf7f8; }
+  button.small {
+    padding: 7px 14px;
+    font-size: 0.85rem;
+    box-shadow: none;
+  }
+  button.danger {
+    background: #fff;
+    color: var(--coral-dark);
+    border: 1px solid var(--coral);
+    box-shadow: none;
+  }
+  button.danger:hover { background: #fff1ee; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
   .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
   #error {
     color: #a12626;
@@ -99,6 +118,76 @@
     margin-bottom: 16px;
     display: none;
     font-size: 0.9rem;
+  }
+  .saved-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+  }
+  .saved-row select { flex: 1; min-width: 140px; }
+  .edit-team-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .edit-team-row input[type=text] { flex: 1; min-width: 120px; }
+  .edit-team-row .amp { color: var(--muted); font-weight: 700; }
+  .edit-team-row .remove-team {
+    background: #fff;
+    color: var(--coral-dark);
+    border: 1px solid var(--coral);
+    box-shadow: none;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  .edit-team-row .remove-team:hover { background: #fff1ee; }
+  #resultsSection { display: none; }
+  .active-teams-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .active-team-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--seafoam);
+    border: 1px solid var(--seafoam-dark);
+    color: var(--ocean-dark);
+    padding: 4px 6px 4px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .active-team-chip button {
+    background: rgba(255,255,255,0.6);
+    color: var(--coral-dark);
+    border: none;
+    box-shadow: none;
+    padding: 2px 8px;
+    font-size: 0.78rem;
+    border-radius: 999px;
+    line-height: 1.6;
+  }
+  .active-team-chip button:hover { background: #fff; }
+  .dropped-teams { margin-top: 12px; }
+  .dropped-teams-label { font-size: 0.8rem; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .dropped-team-chip {
+    display: inline-block;
+    background: #eee;
+    color: #8a8a8a;
+    text-decoration: line-through;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    margin: 0 6px 6px 0;
   }
   .round {
     margin-bottom: 18px;
@@ -194,24 +283,9 @@
     accent-color: var(--seafoam-dark);
     cursor: pointer;
   }
-  .teams-summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-  }
-  .team-chip {
-    background: var(--seafoam);
-    border: 1px solid var(--seafoam-dark);
-    color: var(--ocean-dark);
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 600;
-  }
-  #results { display: none; }
   @media print {
-    .card.input-card, .actions, h1 + .sub, .lock-badge, .round-complete { display: none !important; }
+    .card.input-card, .card#buildTeamsCard, .card#settingsCard, .actions, h1 + .sub,
+    .lock-badge, .round-complete, .active-teams-panel button, .dropped-teams { display: none !important; }
     .round-body { display: block !important; }
     .round.locked .round-header { background: linear-gradient(90deg, var(--ocean) 0%, var(--ocean-light) 140%) !important; color: #fff !important; }
     body { padding: 0; background: #fff; }
@@ -227,6 +301,8 @@
   <div id="error"></div>
 
   <div class="card input-card">
+    <h3>Step 1 · Add Players or Teams</h3>
+    <p class="card-hint">Your entries are saved automatically in this browser for next time.</p>
     <div class="field">
       <label>How are you entering players?</label>
       <div class="radio-group">
@@ -251,6 +327,28 @@
       <textarea id="teamsInput" placeholder="Alex / Jamie&#10;Sam / Taylor&#10;Jordan / Casey&#10;Morgan / Riley"></textarea>
     </div>
 
+    <div class="actions">
+      <button id="buildTeamsBtn">Build Teams →</button>
+    </div>
+  </div>
+
+  <div class="card" id="buildTeamsCard" style="display:none;">
+    <h3>Step 2 · Review &amp; Edit Teams</h3>
+    <p class="card-hint">Fix a mispaired team, rename a player, add or remove a team. Rebuilding from Step 1 will replace this list.</p>
+    <div id="editTeamsList"></div>
+    <div class="actions">
+      <button class="secondary small" id="addTeamBtn">+ Add Team</button>
+    </div>
+    <div class="saved-row">
+      <select id="savedTeamRosters"></select>
+      <button class="secondary small" id="loadRosterBtn">Load</button>
+      <button class="secondary small" id="saveRosterBtn">Save this roster as…</button>
+      <button class="danger small" id="deleteRosterBtn">Delete</button>
+    </div>
+  </div>
+
+  <div class="card" id="settingsCard" style="display:none;">
+    <h3>Step 3 · Courts &amp; Rounds</h3>
     <div class="row">
       <div class="field">
         <label for="courts">Number of courts</label>
@@ -268,41 +366,98 @@
         <input type="number" id="customRounds" min="1" value="3">
       </div>
     </div>
-
     <div class="actions">
       <button id="generateBtn">Generate Schedule</button>
     </div>
   </div>
 
-  <div id="results">
-    <div class="card" id="teamsSummaryCard">
-      <label style="margin-bottom:10px;">Teams</label>
-      <div class="teams-summary" id="teamsSummary"></div>
+  <div id="resultsSection">
+    <div class="card">
+      <label style="margin-bottom:2px;">Players in the Mixer</label>
+      <p class="card-hint" style="margin-top:2px;">Someone leaving early? Drop their team — they'll be removed starting next round. Rounds already played or in progress won't change.</p>
+      <div class="active-teams-panel" id="activeTeamsPanel"></div>
+      <div class="dropped-teams" id="droppedTeamsWrap" style="display:none;">
+        <div class="dropped-teams-label">Dropped from the mixer</div>
+        <div id="droppedTeamsList"></div>
+      </div>
     </div>
     <div id="scheduleContainer"></div>
     <div class="actions">
       <button class="secondary" id="printBtn">Print / Save as PDF</button>
       <button class="secondary" id="csvBtn">Download CSV</button>
-      <button class="secondary" id="regenBtn">Shuffle &amp; Regenerate</button>
     </div>
   </div>
 </div>
 
 <script>
 (function () {
+  // ---------- DOM refs ----------
   const modeRadios = document.querySelectorAll('input[name="mode"]');
   const individualField = document.getElementById('individualField');
   const teamsField = document.getElementById('teamsField');
+  const playersTextarea = document.getElementById('players');
+  const teamsTextarea = document.getElementById('teamsInput');
   const roundsMode = document.getElementById('roundsMode');
   const customRoundsField = document.getElementById('customRoundsField');
   const errorBox = document.getElementById('error');
-  const results = document.getElementById('results');
-  const teamsSummary = document.getElementById('teamsSummary');
+  const buildTeamsCard = document.getElementById('buildTeamsCard');
+  const settingsCard = document.getElementById('settingsCard');
+  const editTeamsList = document.getElementById('editTeamsList');
+  const savedTeamRostersSelect = document.getElementById('savedTeamRosters');
+  const resultsSection = document.getElementById('resultsSection');
+  const activeTeamsPanel = document.getElementById('activeTeamsPanel');
+  const droppedTeamsWrap = document.getElementById('droppedTeamsWrap');
+  const droppedTeamsList = document.getElementById('droppedTeamsList');
   const scheduleContainer = document.getElementById('scheduleContainer');
 
-  let lastMatches = null; // cached for CSV export
-  let roundStates = [];   // true = marked complete
+  // ---------- persistence ----------
+  const LS_KEYS = {
+    individualText: 'pbMixer.individualText',
+    teamsText: 'pbMixer.teamsText',
+    teamRosters: 'pbMixer.teamRosters' // { name: [{a,b}, ...] }
+  };
 
+  function loadJSON(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) { return fallback; }
+  }
+  function saveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+
+  function restoreTextInputs() {
+    const savedIndividual = localStorage.getItem(LS_KEYS.individualText);
+    const savedTeams = localStorage.getItem(LS_KEYS.teamsText);
+    if (savedIndividual) playersTextarea.value = savedIndividual;
+    if (savedTeams) teamsTextarea.value = savedTeams;
+  }
+  playersTextarea.addEventListener('input', () => localStorage.setItem(LS_KEYS.individualText, playersTextarea.value));
+  teamsTextarea.addEventListener('input', () => localStorage.setItem(LS_KEYS.teamsText, teamsTextarea.value));
+
+  function getTeamRosters() { return loadJSON(LS_KEYS.teamRosters, {}); }
+  function setTeamRosters(obj) { saveJSON(LS_KEYS.teamRosters, obj); }
+  function refreshRosterDropdown() {
+    const rosters = getTeamRosters();
+    const names = Object.keys(rosters).sort();
+    savedTeamRostersSelect.innerHTML = names.length
+      ? names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')
+      : '<option value="">No saved rosters yet</option>';
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // ---------- state ----------
+  let editTeams = [];      // [{id, a, b}]
+  let nextEditId = 1;
+  let eventTeams = [];     // [{id, name, active}] snapshot used for the live mixer
+  let displayRounds = [];  // [{roundNumber, heats:[[{a:{id,name},b:{id,name}}...]], byes:[{id,name}]}]
+  let roundStates = [];    // booleans, parallel to displayRounds
+  let roundsSettingValue = 'full';
+  let desiredRoundsTotal = null;
+  let courtsValue = 2;
+
+  // ---------- mode / rounds toggles ----------
   modeRadios.forEach(r => r.addEventListener('change', () => {
     const mode = document.querySelector('input[name="mode"]:checked').value;
     individualField.style.display = mode === 'individual' ? 'block' : 'none';
@@ -316,7 +471,6 @@
   function showError(msg) {
     errorBox.textContent = msg;
     errorBox.style.display = 'block';
-    results.style.display = 'none';
   }
   function clearError() {
     errorBox.style.display = 'none';
@@ -332,51 +486,127 @@
     return a;
   }
 
+  // ---------- Step 1 → Step 2: build editable team list ----------
   function parsePlayers() {
-    return document.getElementById('players').value
-      .split('\n')
-      .map(s => s.trim())
-      .filter(Boolean);
+    return playersTextarea.value.split('\n').map(s => s.trim()).filter(Boolean);
   }
-
   function parseTeamsInput() {
-    return document.getElementById('teamsInput').value
-      .split('\n')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .map(line => {
-        const parts = line.split(/\s*[\/,&]\s*|\s+and\s+/i).map(s => s.trim()).filter(Boolean);
-        if (parts.length < 2) return null;
-        return { name: parts[0] + ' & ' + parts[1], players: [parts[0], parts[1]] };
-      });
+    return teamsTextarea.value.split('\n').map(s => s.trim()).filter(Boolean).map(line => {
+      const parts = line.split(/\s*[\/,&]\s*|\s+and\s+/i).map(s => s.trim()).filter(Boolean);
+      if (parts.length < 2) return null;
+      return { a: parts[0], b: parts[1] };
+    });
   }
 
-  function buildTeams() {
+  function buildPairsFromSource() {
     const mode = document.querySelector('input[name="mode"]:checked').value;
     if (mode === 'individual') {
       let players = parsePlayers();
       if (players.length < 4) throw new Error('Enter at least 4 players.');
       if (players.length % 2 !== 0) throw new Error('Enter an even number of players so everyone gets a partner.');
-      const shuffle = document.getElementById('shuffle').checked;
-      if (shuffle) players = shuffleArray(players);
-      const teams = [];
-      for (let i = 0; i < players.length; i += 2) {
-        teams.push({ name: players[i] + ' & ' + players[i + 1], players: [players[i], players[i + 1]] });
-      }
-      return teams;
+      if (document.getElementById('shuffle').checked) players = shuffleArray(players);
+      const pairs = [];
+      for (let i = 0; i < players.length; i += 2) pairs.push({ a: players[i], b: players[i + 1] });
+      return pairs;
     } else {
-      const teams = parseTeamsInput();
-      if (teams.some(t => t === null)) throw new Error('Each team line needs two names separated by "/", ",", "&", or "and".');
-      if (teams.length < 2) throw new Error('Enter at least 2 teams.');
-      return teams;
+      const pairs = parseTeamsInput();
+      if (pairs.some(p => p === null)) throw new Error('Each team line needs two names separated by "/", ",", "&", or "and".');
+      if (pairs.length < 2) throw new Error('Enter at least 2 teams.');
+      return pairs;
     }
   }
 
-  // Circle method round-robin: returns array of rounds, each round is array of [teamIndexA, teamIndexB] (or null for bye)
-  function roundRobinRounds(n) {
+  function setEditTeams(pairs) {
+    editTeams = pairs.map(p => ({ id: nextEditId++, a: p.a, b: p.b }));
+    renderEditTeams();
+    buildTeamsCard.style.display = 'block';
+    settingsCard.style.display = 'block';
+  }
+
+  function renderEditTeams() {
+    editTeamsList.innerHTML = '';
+    editTeams.forEach(team => {
+      const row = document.createElement('div');
+      row.className = 'edit-team-row';
+      row.innerHTML = `
+        <input type="text" value="${escapeHtml(team.a)}" data-id="${team.id}" data-side="a" placeholder="Player A">
+        <span class="amp">&amp;</span>
+        <input type="text" value="${escapeHtml(team.b)}" data-id="${team.id}" data-side="b" placeholder="Player B">
+        <button class="remove-team" type="button" data-id="${team.id}">✕ Remove</button>
+      `;
+      editTeamsList.appendChild(row);
+    });
+
+    editTeamsList.querySelectorAll('input[type=text]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const id = parseInt(inp.dataset.id, 10);
+        const side = inp.dataset.side;
+        const team = editTeams.find(t => t.id === id);
+        if (team) team[side] = inp.value;
+      });
+    });
+    editTeamsList.querySelectorAll('.remove-team').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.dataset.id, 10);
+        editTeams = editTeams.filter(t => t.id !== id);
+        renderEditTeams();
+      });
+    });
+  }
+
+  document.getElementById('buildTeamsBtn').addEventListener('click', () => {
+    clearError();
+    try {
+      const pairs = buildPairsFromSource();
+      setEditTeams(pairs);
+      buildTeamsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+      showError(e.message);
+    }
+  });
+
+  document.getElementById('addTeamBtn').addEventListener('click', () => {
+    editTeams.push({ id: nextEditId++, a: '', b: '' });
+    renderEditTeams();
+  });
+
+  // ---------- saved team rosters ----------
+  refreshRosterDropdown();
+
+  document.getElementById('saveRosterBtn').addEventListener('click', () => {
+    const valid = editTeams.filter(t => t.a.trim() && t.b.trim());
+    if (valid.length < 2) { showError('Add at least 2 complete teams before saving a roster.'); return; }
+    const name = prompt('Save this roster as:');
+    if (!name) return;
+    const rosters = getTeamRosters();
+    rosters[name.trim()] = valid.map(t => ({ a: t.a.trim(), b: t.b.trim() }));
+    setTeamRosters(rosters);
+    refreshRosterDropdown();
+    savedTeamRostersSelect.value = name.trim();
+  });
+
+  document.getElementById('loadRosterBtn').addEventListener('click', () => {
+    const name = savedTeamRostersSelect.value;
+    const rosters = getTeamRosters();
+    if (!name || !rosters[name]) return;
+    setEditTeams(rosters[name]);
+  });
+
+  document.getElementById('deleteRosterBtn').addEventListener('click', () => {
+    const name = savedTeamRostersSelect.value;
+    if (!name) return;
+    if (!confirm(`Delete the saved roster "${name}"? This can't be undone.`)) return;
+    const rosters = getTeamRosters();
+    delete rosters[name];
+    setTeamRosters(rosters);
+    refreshRosterDropdown();
+  });
+
+  // ---------- round-robin core ----------
+  function roundRobinIndexRounds(n) {
     const teams = [...Array(n).keys()];
     const hasBye = n % 2 !== 0;
-    if (hasBye) teams.push(-1); // -1 = bye slot
+    if (hasBye) teams.push(-1);
     const total = teams.length;
     const numRounds = total - 1;
     const half = total / 2;
@@ -387,11 +617,10 @@
       for (let i = 0; i < half; i++) {
         const a = arr[i], b = arr[total - 1 - i];
         if (a !== -1 && b !== -1) roundPairs.push([a, b]);
-        else if (a === -1) roundPairs.push([b, -1]); // bye marker attached to b
+        else if (a === -1) roundPairs.push([b, -1]);
         else roundPairs.push([a, -1]);
       }
       rounds.push(roundPairs);
-      // rotate all but the first element
       const fixed = arr[0];
       const rest = arr.slice(1);
       rest.unshift(rest.pop());
@@ -400,48 +629,112 @@
     return rounds;
   }
 
-  function generateSchedule(teams, courts, desiredRounds) {
-    const n = teams.length;
-    const robin = roundRobinRounds(n);
-    const maxFullRounds = robin.length;
-    let roundsToUse = robin;
-    if (desiredRounds && desiredRounds < maxFullRounds) {
-      roundsToUse = robin.slice(0, desiredRounds);
-    } else if (desiredRounds && desiredRounds > maxFullRounds) {
-      // repeat the robin cycle to fill extra rounds requested
+  // teamObjs: [{id, name}]; desiredRounds: null/undefined = full cycle
+  function buildDisplayRounds(teamObjs, courts, desiredRounds, startRoundNumber) {
+    const n = teamObjs.length;
+    if (n < 2) return [];
+    const idxRounds = roundRobinIndexRounds(n);
+    const maxFull = idxRounds.length;
+    let roundsToUse = idxRounds;
+    if (desiredRounds && desiredRounds < maxFull) {
+      roundsToUse = idxRounds.slice(0, desiredRounds);
+    } else if (desiredRounds && desiredRounds > maxFull) {
       const extended = [];
-      for (let i = 0; i < desiredRounds; i++) {
-        extended.push(robin[i % maxFullRounds]);
-      }
+      for (let i = 0; i < desiredRounds; i++) extended.push(idxRounds[i % maxFull]);
       roundsToUse = extended;
     }
-
-    // Build display rounds, splitting into heats when matches > courts
-    const displayRounds = [];
-    roundsToUse.forEach((roundPairs, idx) => {
-      const matches = roundPairs.filter(p => p[0] !== -1 && p[1] !== -1);
-      const byes = roundPairs.filter(p => p[1] === -1).map(p => p[0]);
+    const rounds = [];
+    roundsToUse.forEach((roundPairs, i) => {
+      const matches = roundPairs.filter(p => p[0] !== -1 && p[1] !== -1).map(p => ({ a: teamObjs[p[0]], b: teamObjs[p[1]] }));
+      const byes = roundPairs.filter(p => p[1] === -1).map(p => teamObjs[p[0]]);
       const heats = [];
-      for (let i = 0; i < matches.length; i += courts) {
-        heats.push(matches.slice(i, i + courts));
-      }
+      for (let k = 0; k < matches.length; k += courts) heats.push(matches.slice(k, k + courts));
       if (heats.length === 0) heats.push([]);
-      displayRounds.push({ roundNumber: idx + 1, heats, byes });
+      rounds.push({ roundNumber: startRoundNumber + i, heats, byes });
     });
-
-    return displayRounds;
+    return rounds;
   }
 
-  function renderTeamsSummary(teams) {
-    teamsSummary.innerHTML = '';
-    teams.forEach(t => {
+  // ---------- Step 3: generate schedule ----------
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    clearError();
+    if (resultsSection.style.display === 'block') {
+      if (!confirm('This starts a brand-new mixer and replaces the one in progress (including round history). Continue?')) return;
+    }
+    try {
+      const valid = editTeams.filter(t => t.a.trim() && t.b.trim());
+      if (valid.length < 2) throw new Error('You need at least 2 complete teams to generate a schedule.');
+      courtsValue = parseInt(document.getElementById('courts').value, 10);
+      if (!courtsValue || courtsValue < 1) throw new Error('Enter at least 1 court.');
+      roundsSettingValue = roundsMode.value;
+      desiredRoundsTotal = null;
+      if (roundsSettingValue === 'custom') {
+        desiredRoundsTotal = parseInt(document.getElementById('customRounds').value, 10);
+        if (!desiredRoundsTotal || desiredRoundsTotal < 1) throw new Error('Enter a valid number of rounds.');
+      }
+
+      eventTeams = valid.map(t => ({ id: t.id, name: `${t.a.trim()} & ${t.b.trim()}`, active: true }));
+      displayRounds = buildDisplayRounds(eventTeams, courtsValue, desiredRoundsTotal, 1);
+      roundStates = displayRounds.map(() => false);
+
+      renderActiveTeamsPanel();
+      renderRounds();
+      resultsSection.style.display = 'block';
+      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+      showError(e.message);
+    }
+  });
+
+  // ---------- active teams / drop mid-event ----------
+  function renderActiveTeamsPanel() {
+    activeTeamsPanel.innerHTML = '';
+    eventTeams.filter(t => t.active).forEach(team => {
       const chip = document.createElement('span');
-      chip.className = 'team-chip';
-      chip.textContent = t.name;
-      teamsSummary.appendChild(chip);
+      chip.className = 'active-team-chip';
+      chip.innerHTML = `${escapeHtml(team.name)} <button type="button" data-id="${team.id}">✕ Drop</button>`;
+      activeTeamsPanel.appendChild(chip);
     });
+    activeTeamsPanel.querySelectorAll('button[data-id]').forEach(btn => {
+      btn.addEventListener('click', () => dropTeam(parseInt(btn.dataset.id, 10)));
+    });
+
+    const dropped = eventTeams.filter(t => !t.active);
+    droppedTeamsWrap.style.display = dropped.length ? 'block' : 'none';
+    droppedTeamsList.innerHTML = dropped.map(t => `<span class="dropped-team-chip">${escapeHtml(t.name)}</span>`).join('');
   }
 
+  function dropTeam(id) {
+    const team = eventTeams.find(t => t.id === id && t.active);
+    if (!team) return;
+    if (!confirm(`Remove ${team.name} from the mixer? They'll be gone starting next round — rounds already played or in progress stay as-is.`)) return;
+
+    team.active = false;
+
+    let completedCount = 0;
+    while (completedCount < roundStates.length && roundStates[completedCount]) completedCount++;
+    const frozenCount = Math.min(completedCount + 1, displayRounds.length);
+
+    const frozenRounds = displayRounds.slice(0, frozenCount);
+    const activeTeamObjs = eventTeams.filter(t => t.active).map(t => ({ id: t.id, name: t.name }));
+
+    let futureCount = null;
+    if (roundsSettingValue === 'custom') {
+      futureCount = Math.max((desiredRoundsTotal || 0) - frozenCount, 0);
+    }
+
+    const newFutureRounds = activeTeamObjs.length >= 2
+      ? buildDisplayRounds(activeTeamObjs, courtsValue, futureCount, frozenCount + 1)
+      : [];
+
+    displayRounds = frozenRounds.concat(newFutureRounds);
+    roundStates = displayRounds.map((_, i) => i < frozenCount ? roundStates[i] : false);
+
+    renderActiveTeamsPanel();
+    renderRounds();
+  }
+
+  // ---------- rounds accordion ----------
   function updateRoundVisibility() {
     const roundEls = scheduleContainer.querySelectorAll('.round');
     roundEls.forEach((roundDiv, idx) => {
@@ -453,22 +746,16 @@
 
       roundDiv.classList.toggle('locked', !unlocked);
       roundDiv.classList.toggle('complete', complete);
-
       if (body) body.style.display = unlocked ? 'block' : 'none';
       if (lockedMsg) lockedMsg.style.display = unlocked ? 'none' : 'block';
-
-      if (badge) {
-        badge.textContent = complete ? '✅ Complete' : (unlocked ? '▶ In progress' : '🔒 Locked');
-      }
+      if (badge) badge.textContent = complete ? '✅ Complete' : (unlocked ? '▶ In progress' : '🔒 Locked');
     });
   }
 
-  function renderSchedule(displayRounds, teams) {
+  function renderRounds() {
     scheduleContainer.innerHTML = '';
-    const csvRows = [['Round', 'Heat', 'Court', 'Team A', 'Team B']];
-    roundStates = displayRounds.map(() => false);
 
-    displayRounds.forEach(round => {
+    displayRounds.forEach((round, roundIdx) => {
       const roundDiv = document.createElement('div');
       roundDiv.className = 'round';
 
@@ -485,42 +772,43 @@
       const body = document.createElement('div');
       body.className = 'round-body';
 
-      const totalHeats = round.heats.length;
-      round.heats.forEach((heat, heatIdx) => {
-        if (totalHeats > 1) {
-          const heatLabel = document.createElement('div');
-          heatLabel.className = 'heat-label';
-          heatLabel.textContent = `Heat ${heatIdx + 1} of ${totalHeats}`;
-          body.appendChild(heatLabel);
-        }
-
-        const table = document.createElement('table');
-        table.innerHTML = '<thead><tr><th>Court</th><th>Team A</th><th>Team B</th></tr></thead>';
-        const tbody = document.createElement('tbody');
-        heat.forEach((match, i) => {
-          const tr = document.createElement('tr');
-          const teamA = teams[match[0]].name;
-          const teamB = teams[match[1]].name;
-          tr.innerHTML = `<td>Court ${i + 1}</td><td>${teamA}</td><td>${teamB}</td>`;
-          tbody.appendChild(tr);
-          csvRows.push([round.roundNumber, heatIdx + 1, i + 1, teamA, teamB]);
+      if (round.heats.every(h => h.length === 0) && round.byes.length === 0) {
+        const emptyMsg = document.createElement('p');
+        emptyMsg.className = 'bye';
+        emptyMsg.textContent = 'Not enough teams remaining to schedule this round.';
+        body.appendChild(emptyMsg);
+      } else {
+        const totalHeats = round.heats.length;
+        round.heats.forEach((heat, heatIdx) => {
+          if (totalHeats > 1) {
+            const heatLabel = document.createElement('div');
+            heatLabel.className = 'heat-label';
+            heatLabel.textContent = `Heat ${heatIdx + 1} of ${totalHeats}`;
+            body.appendChild(heatLabel);
+          }
+          const table = document.createElement('table');
+          table.innerHTML = '<thead><tr><th>Court</th><th>Team A</th><th>Team B</th></tr></thead>';
+          const tbody = document.createElement('tbody');
+          heat.forEach((match, i) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>Court ${i + 1}</td><td>${escapeHtml(match.a.name)}</td><td>${escapeHtml(match.b.name)}</td>`;
+            tbody.appendChild(tr);
+          });
+          table.appendChild(tbody);
+          body.appendChild(table);
         });
-        table.appendChild(tbody);
-        body.appendChild(table);
-      });
 
-      if (round.byes.length) {
-        const byeP = document.createElement('p');
-        byeP.className = 'bye';
-        byeP.textContent = 'Bye: ' + round.byes.map(i => teams[i].name).join(', ');
-        body.appendChild(byeP);
-        round.byes.forEach(i => csvRows.push([round.roundNumber, '-', '-', teams[i].name + ' (BYE)', '']));
+        if (round.byes.length) {
+          const byeP = document.createElement('p');
+          byeP.className = 'bye';
+          byeP.textContent = 'Bye: ' + round.byes.map(t => t.name).join(', ');
+          body.appendChild(byeP);
+        }
       }
 
       const completeLabel = document.createElement('label');
       completeLabel.className = 'round-complete';
-      const idx = round.roundNumber - 1;
-      completeLabel.innerHTML = `<input type="checkbox" data-round="${idx}"> Mark Round ${round.roundNumber} complete${idx < displayRounds.length - 1 ? ' — unlock next round' : ''}`;
+      completeLabel.innerHTML = `<input type="checkbox" data-round="${roundIdx}"> Mark Round ${round.roundNumber} complete${roundIdx < displayRounds.length - 1 ? ' — unlock next round' : ''}`;
       body.appendChild(completeLabel);
 
       roundDiv.appendChild(body);
@@ -528,11 +816,13 @@
     });
 
     scheduleContainer.querySelectorAll('input[type=checkbox][data-round]').forEach(cb => {
+      const idx = parseInt(cb.dataset.round, 10);
+      cb.checked = !!roundStates[idx];
       cb.addEventListener('change', e => {
-        const idx = parseInt(e.target.dataset.round, 10);
-        roundStates[idx] = e.target.checked;
+        const i = parseInt(e.target.dataset.round, 10);
+        roundStates[i] = e.target.checked;
         if (!e.target.checked) {
-          for (let j = idx + 1; j < roundStates.length; j++) {
+          for (let j = i + 1; j < roundStates.length; j++) {
             roundStates[j] = false;
             const laterCb = scheduleContainer.querySelector(`input[data-round="${j}"]`);
             if (laterCb) laterCb.checked = false;
@@ -541,44 +831,29 @@
         updateRoundVisibility();
         if (e.target.checked) {
           const rounds = scheduleContainer.querySelectorAll('.round');
-          const nextRound = rounds[idx + 1];
+          const nextRound = rounds[i + 1];
           if (nextRound) nextRound.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });
     });
 
     updateRoundVisibility();
-    lastMatches = csvRows;
   }
 
-  function generate() {
-    clearError();
-    try {
-      const teams = buildTeams();
-      const courts = parseInt(document.getElementById('courts').value, 10);
-      if (!courts || courts < 1) throw new Error('Enter at least 1 court.');
-      let desiredRounds = null;
-      if (roundsMode.value === 'custom') {
-        desiredRounds = parseInt(document.getElementById('customRounds').value, 10);
-        if (!desiredRounds || desiredRounds < 1) throw new Error('Enter a valid number of rounds.');
-      }
-      const displayRounds = generateSchedule(teams, courts, desiredRounds);
-      renderTeamsSummary(teams);
-      renderSchedule(displayRounds, teams);
-      results.style.display = 'block';
-    } catch (e) {
-      showError(e.message);
-    }
-  }
-
-  document.getElementById('generateBtn').addEventListener('click', generate);
-  document.getElementById('regenBtn').addEventListener('click', generate);
-
+  // ---------- export ----------
   document.getElementById('printBtn').addEventListener('click', () => window.print());
 
   document.getElementById('csvBtn').addEventListener('click', () => {
-    if (!lastMatches) return;
-    const csv = lastMatches.map(row => row.map(cell => {
+    const csvRows = [['Round', 'Heat', 'Court', 'Team A', 'Team B']];
+    displayRounds.forEach(round => {
+      round.heats.forEach((heat, heatIdx) => {
+        heat.forEach((match, i) => {
+          csvRows.push([round.roundNumber, heatIdx + 1, i + 1, match.a.name, match.b.name]);
+        });
+      });
+      round.byes.forEach(t => csvRows.push([round.roundNumber, '-', '-', t.name + ' (BYE)', '']));
+    });
+    const csv = csvRows.map(row => row.map(cell => {
       const s = String(cell);
       return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
     }).join(',')).join('\n');
@@ -590,6 +865,9 @@
     a.click();
     URL.revokeObjectURL(url);
   });
+
+  // ---------- init ----------
+  restoreTextInputs();
 })();
 </script>
 </body>
