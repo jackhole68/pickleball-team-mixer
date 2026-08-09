@@ -1,0 +1,25 @@
+{
+  "name": "MXD-PB Pickleball Team Mixer",
+  "short_name": "MXD-PB Mixer",
+  "description": "Build fixed-team or fully random pickleball mixer schedules on the fly.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#fbf3e1",
+  "theme_color": "#1789a0",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
