@@ -152,6 +152,17 @@
     margin-bottom: 10px;
   }
   .edit-player-row input[type=text] { flex: 1; }
+  .add-participant-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border);
+  }
+  .add-participant-row input[type=text] { flex: 1; min-width: 140px; }
+  .add-participant-row .amp { color: var(--muted); font-weight: 700; }
   .remove-team {
     background: #fff;
     color: var(--coral-dark);
@@ -410,11 +421,22 @@
   <div id="resultsSection">
     <div class="card">
       <label style="margin-bottom:2px;">Players in the Mixer</label>
-      <p class="card-hint" style="margin-top:2px;">Someone leaving early? Drop them — they'll be removed starting next round. Rounds already played or in progress won't change.</p>
+      <p class="card-hint" style="margin-top:2px;">Someone leaving early? Drop them — they'll be removed starting next round. Someone showing up late? Add them below — they'll join starting next round. Either way, rounds already played or in progress won't change.</p>
       <div class="active-teams-panel" id="activeTeamsPanel"></div>
       <div class="dropped-teams" id="droppedTeamsWrap" style="display:none;">
         <div class="dropped-teams-label">Dropped from the mixer</div>
         <div id="droppedTeamsList"></div>
+      </div>
+
+      <div class="add-participant-row" id="addPlayerMidEventRow">
+        <input type="text" id="addPlayerMidEventInput" placeholder="New player name">
+        <button class="secondary small" id="addPlayerMidEventBtn" type="button">+ Add Player</button>
+      </div>
+      <div class="add-participant-row" id="addTeamMidEventRow" style="display:none;">
+        <input type="text" id="addTeamMidEventA" placeholder="Player A">
+        <span class="amp">&amp;</span>
+        <input type="text" id="addTeamMidEventB" placeholder="Player B">
+        <button class="secondary small" id="addTeamMidEventBtn" type="button">+ Add Team</button>
       </div>
     </div>
     <div id="scheduleContainer"></div>
@@ -875,16 +897,15 @@
     const dropped = list.filter(p => !p.active);
     droppedTeamsWrap.style.display = dropped.length ? 'block' : 'none';
     droppedTeamsList.innerHTML = dropped.map(p => `<span class="dropped-team-chip">${escapeHtml(p.name)}</span>`).join('');
+
+    document.getElementById('addPlayerMidEventRow').style.display = mixerMode === 'individual' ? 'flex' : 'none';
+    document.getElementById('addTeamMidEventRow').style.display = mixerMode === 'individual' ? 'none' : 'flex';
   }
 
-  function dropParticipant(id) {
-    const list = mixerMode === 'individual' ? eventPlayers : eventTeams;
-    const participant = list.find(p => p.id === id && p.active);
-    if (!participant) return;
-    if (!confirm(`Remove ${participant.name} from the mixer? They'll be gone starting next round — rounds already played or in progress stay as-is.`)) return;
-
-    participant.active = false;
-
+  // Re-splits the schedule into "frozen" rounds (already played, or in progress right
+  // now) and freshly-generated "future" rounds built from whoever is currently active.
+  // Used by both drop and add so mid-event roster changes only affect what's next.
+  function regenerateFutureRounds() {
     let completedCount = 0;
     while (completedCount < roundStates.length && roundStates[completedCount]) completedCount++;
     const frozenCount = Math.min(completedCount + 1, displayRounds.length);
@@ -908,10 +929,57 @@
 
     displayRounds = frozenRounds.concat(newFutureRounds);
     roundStates = displayRounds.map((_, i) => i < frozenCount ? roundStates[i] : false);
+  }
 
+  function dropParticipant(id) {
+    const list = mixerMode === 'individual' ? eventPlayers : eventTeams;
+    const participant = list.find(p => p.id === id && p.active);
+    if (!participant) return;
+    if (!confirm(`Remove ${participant.name} from the mixer? They'll be gone starting next round — rounds already played or in progress stay as-is.`)) return;
+
+    participant.active = false;
+    regenerateFutureRounds();
     renderActiveParticipantsPanel();
     renderRounds();
   }
+
+  function addPlayerMidEvent() {
+    clearError();
+    const input = document.getElementById('addPlayerMidEventInput');
+    const name = input.value.trim();
+    if (!name) { showError('Enter a player name to add.'); return; }
+
+    eventPlayers.push({ id: nextEditId++, name, active: true });
+    input.value = '';
+    regenerateFutureRounds();
+    renderActiveParticipantsPanel();
+    renderRounds();
+  }
+
+  function addTeamMidEvent() {
+    clearError();
+    const aInput = document.getElementById('addTeamMidEventA');
+    const bInput = document.getElementById('addTeamMidEventB');
+    const a = aInput.value.trim();
+    const b = bInput.value.trim();
+    if (!a || !b) { showError('Enter both player names to add a team.'); return; }
+
+    eventTeams.push({ id: nextEditId++, name: `${a} & ${b}`, active: true });
+    aInput.value = '';
+    bInput.value = '';
+    regenerateFutureRounds();
+    renderActiveParticipantsPanel();
+    renderRounds();
+  }
+
+  document.getElementById('addPlayerMidEventBtn').addEventListener('click', addPlayerMidEvent);
+  document.getElementById('addTeamMidEventBtn').addEventListener('click', addTeamMidEvent);
+  document.getElementById('addPlayerMidEventInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addPlayerMidEvent();
+  });
+  document.getElementById('addTeamMidEventB').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addTeamMidEvent();
+  });
 
   // ---------- rounds accordion ----------
   function updateRoundVisibility() {
