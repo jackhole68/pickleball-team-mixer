@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mxd-pb-mixer-v2';
+const CACHE_NAME = 'mxd-pb-mixer-v3';
 const APP_SHELL = [
   './',
   './index.html',
@@ -25,20 +25,20 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Network-first: always try to get the latest version when online (so a deploy
+// shows up immediately, no manual cache-bumping required), and only fall back to
+// the cached copy when the network is unavailable (offline at the court).
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request)
-        .then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
+    fetch(event.request)
+      .then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
