@@ -4,37 +4,37 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pickleball Team Mixer</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Crect x='42' y='38' width='10' height='20' rx='4' fill='%230d5f72'/%3E%3Crect x='18' y='4' width='38' height='46' rx='16' fill='%23ff6f59' stroke='%23e6543f' stroke-width='2'/%3E%3Ccircle cx='78' cy='40' r='14' fill='%23f4e04d' stroke='%23c9b400' stroke-width='1.5'/%3E%3Ccircle cx='72' cy='34' r='1.6' fill='%23c9b400'/%3E%3Ccircle cx='82' cy='33' r='1.6' fill='%23c9b400'/%3E%3Ccircle cx='86' cy='41' r='1.6' fill='%23c9b400'/%3E%3Ccircle cx='78' cy='47' r='1.6' fill='%23c9b400'/%3E%3Ccircle cx='70' cy='44' r='1.6' fill='%23c9b400'/%3E%3Ccircle cx='78' cy='40' r='1.6' fill='%23c9b400'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Crect x='42' y='38' width='10' height='20' rx='4' fill='%233a3a3a'/%3E%3Crect x='18' y='4' width='38' height='46' rx='16' fill='%23b3272d' stroke='%238c1f24' stroke-width='2'/%3E%3Ccircle cx='78' cy='40' r='14' fill='%23e8e8e8' stroke='%239a9a9a' stroke-width='1.5'/%3E%3Ccircle cx='72' cy='34' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='82' cy='33' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='86' cy='41' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='78' cy='47' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='70' cy='44' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='78' cy='40' r='1.6' fill='%239a9a9a'/%3E%3C/svg%3E">
 
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="theme-color" content="#1789a0">
+<meta name="theme-color" content="#b3272d">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MXD-PB Mixer">
 <style>
   :root {
-    --ocean: #1789a0;
-    --ocean-dark: #0d5f72;
-    --ocean-light: #6fc4d6;
-    --coral: #ff6f59;
-    --coral-dark: #e6543f;
-    --sun: #ffb84d;
-    --seafoam: #bfe8d4;
-    --seafoam-dark: #2f8f6d;
-    --sand: #f3e3c3;
-    --sand-light: #fbf3e1;
-    --card: #fffdf7;
-    --border: #ecdcb8;
-    --text: #234249;
-    --muted: #74898c;
+    --ocean: #b3272d;
+    --ocean-dark: #7d1b1f;
+    --ocean-light: #e3a6a8;
+    --coral: #b3272d;
+    --coral-dark: #8c1f24;
+    --sun: #9a9a9a;
+    --seafoam: #ececec;
+    --seafoam-dark: #b5b5b5;
+    --sand: #ececec;
+    --sand-light: #f7f7f7;
+    --card: #ffffff;
+    --border: #dcdcdc;
+    --text: #262626;
+    --muted: #7a7a7a;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: linear-gradient(180deg, #eaf7f8 0%, var(--sand-light) 45%);
+    background: linear-gradient(180deg, #f7f7f7 0%, var(--sand-light) 45%);
     color: var(--text);
     padding: 24px 16px 80px;
   }
@@ -49,7 +49,7 @@
     border-radius: 14px;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(23, 137, 160, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
   .card h3 {
     margin: 0 0 4px;
@@ -72,7 +72,7 @@
   textarea:focus, input:focus, select:focus {
     outline: none;
     border-color: var(--ocean-light);
-    box-shadow: 0 0 0 3px rgba(111, 196, 214, 0.3);
+    box-shadow: 0 0 0 3px rgba(179, 39, 45, 0.25);
   }
   textarea { min-height: 140px; resize: vertical; }
   .row { display: flex; gap: 16px; flex-wrap: wrap; }
@@ -92,7 +92,7 @@
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(255, 111, 89, 0.35);
+    box-shadow: 0 2px 6px rgba(179, 39, 45, 0.35);
   }
   button:hover { background: var(--coral-dark); }
   button.secondary {
@@ -220,7 +220,7 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(23, 137, 160, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     transition: opacity 0.25s ease;
   }
   .round-header {
@@ -246,7 +246,7 @@
     white-space: nowrap;
   }
   .round.complete .round-header {
-    background: linear-gradient(90deg, var(--seafoam-dark) 0%, var(--seafoam) 140%);
+    background: linear-gradient(90deg, #3a3a3a 0%, #6b6b6b 140%);
   }
   .round.locked .round-header {
     background: #cdd7d6;
@@ -305,7 +305,7 @@
   .round-complete input {
     width: 20px;
     height: 20px;
-    accent-color: var(--seafoam-dark);
+    accent-color: var(--ocean-dark);
     cursor: pointer;
   }
   @media print {
@@ -810,15 +810,73 @@
     return rounds;
   }
 
+  // For n teams (n odd), the circle-method schedule above always gives every team
+  // exactly one bye per full cycle, but WHICH array position sits out on WHICH round
+  // is a fixed structural pattern — not simply the input order. This runs the
+  // algorithm once on placeholder "slots" to learn that pattern: slotOrder[k] is the
+  // slot index that sits out in the k-th round with a bye.
+  function getByeSlotOrder(n) {
+    if (n % 2 === 0) return [];
+    const dummySlots = Array.from({ length: n }, (_, i) => ({ id: i, name: String(i) }));
+    const rounds = buildDisplayRounds(dummySlots, 1, null, 1);
+    return rounds.map(r => r.byes[0].id);
+  }
+
+  // Reorders teams before scheduling so that whichever team has sat out the fewest
+  // times so far lands in the slot that gets the earliest bye — so byes rotate
+  // through everyone once before anyone sits a second time, even across a roster
+  // change. Pairing correctness (everyone plays everyone once) is unaffected, since
+  // reordering the input only changes which team occupies which slot, not the
+  // schedule's structure.
+  function reorderTeamsForFairness(teamObjs, sitOutCounts) {
+    const n = teamObjs.length;
+    const slotOrder = getByeSlotOrder(n);
+    if (slotOrder.length === 0) return teamObjs;
+
+    const byFewestSitOuts = teamObjs.slice().sort((a, b) => (sitOutCounts[a.id] || 0) - (sitOutCounts[b.id] || 0));
+    const result = new Array(n);
+    slotOrder.forEach((slotIndex, k) => { result[slotIndex] = byFewestSitOuts[k]; });
+    return result;
+  }
+
   // ---------- fully random individual mixer ----------
-  // playerObjs: [{id, name}] — every round, partners AND opponents are reshuffled from scratch
-  function buildRandomRounds(playerObjs, courts, numRounds, startRoundNumber) {
+  // Tallies how many times each participant has already sat out, from a set of
+  // already-generated rounds (their byes always carry {id}). Shared by both mixer
+  // modes so "who sits out" stays fair across the whole event, including after
+  // players are added or dropped mid-event.
+  function computeSitOutCounts(rounds) {
+    const counts = {};
+    rounds.forEach(round => {
+      round.byes.forEach(b => { counts[b.id] = (counts[b.id] || 0) + 1; });
+    });
+    return counts;
+  }
+
+  // playerObjs: [{id, name}] — every round, partners AND opponents are reshuffled from
+  // scratch, but WHO sits out is decided separately: whoever has sat out the fewest
+  // times so far (starting from initialSitOutCounts) gets priority to sit, so sit-outs
+  // rotate through everyone once before anyone sits a second time.
+  function buildRandomRounds(playerObjs, courts, numRounds, startRoundNumber, initialSitOutCounts) {
+    const counts = {};
+    playerObjs.forEach(p => { counts[p.id] = (initialSitOutCounts && initialSitOutCounts[p.id]) || 0; });
+
     const rounds = [];
     for (let i = 0; i < numRounds; i++) {
-      const shuffled = shuffleArray(playerObjs);
-      const numGroups = Math.floor(shuffled.length / 4);
-      const playing = shuffled.slice(0, numGroups * 4);
-      const sitting = shuffled.slice(numGroups * 4);
+      const n = playerObjs.length;
+      const sitOutSlots = n % 4;
+
+      let sittingOut = [];
+      let playingPool = playerObjs;
+      if (sitOutSlots > 0) {
+        const byFewestSitOuts = playerObjs.slice().sort((a, b) => counts[a.id] - counts[b.id]);
+        sittingOut = byFewestSitOuts.slice(0, sitOutSlots);
+        const sittingIds = new Set(sittingOut.map(p => p.id));
+        playingPool = playerObjs.filter(p => !sittingIds.has(p.id));
+        sittingOut.forEach(p => { counts[p.id] += 1; });
+      }
+
+      const playing = shuffleArray(playingPool);
+      const numGroups = Math.floor(playing.length / 4);
       const matches = [];
       for (let g = 0; g < numGroups; g++) {
         const four = playing.slice(g * 4, g * 4 + 4);
@@ -830,7 +888,7 @@
       const heats = [];
       for (let k = 0; k < matches.length; k += courts) heats.push(matches.slice(k, k + courts));
       if (heats.length === 0) heats.push([]);
-      rounds.push({ roundNumber: startRoundNumber + i, heats, byes: sitting.map(p => ({ name: p.name })) });
+      rounds.push({ roundNumber: startRoundNumber + i, heats, byes: sittingOut.map(p => ({ id: p.id, name: p.name })) });
     }
     return rounds;
   }
@@ -854,7 +912,7 @@
 
         eventPlayers = valid.map(p => ({ id: p.id, name: p.name.trim(), active: true }));
         eventTeams = [];
-        displayRounds = buildRandomRounds(eventPlayers, courtsValue, desiredRoundsTotal, 1);
+        displayRounds = buildRandomRounds(eventPlayers, courtsValue, desiredRoundsTotal, 1, {});
       } else {
         const valid = editTeams.filter(t => t.a.trim() && t.b.trim());
         if (valid.length < 2) throw new Error('You need at least 2 complete teams to generate a schedule.');
@@ -867,7 +925,8 @@
 
         eventTeams = valid.map(t => ({ id: t.id, name: `${t.a.trim()} & ${t.b.trim()}`, active: true }));
         eventPlayers = [];
-        displayRounds = buildDisplayRounds(eventTeams, courtsValue, desiredRoundsTotal, 1);
+        const orderedTeams = reorderTeamsForFairness(eventTeams, {});
+        displayRounds = buildDisplayRounds(orderedTeams, courtsValue, desiredRoundsTotal, 1);
       }
 
       roundStates = displayRounds.map(() => false);
@@ -910,20 +969,22 @@
     while (completedCount < roundStates.length && roundStates[completedCount]) completedCount++;
     const frozenCount = Math.min(completedCount + 1, displayRounds.length);
     const frozenRounds = displayRounds.slice(0, frozenCount);
+    const sitOutCounts = computeSitOutCounts(frozenRounds);
 
     let newFutureRounds;
     if (mixerMode === 'individual') {
       const activePlayerObjs = eventPlayers.filter(p => p.active).map(p => ({ id: p.id, name: p.name }));
       const futureCount = Math.max((desiredRoundsTotal || 0) - frozenCount, 0);
       newFutureRounds = activePlayerObjs.length >= 4
-        ? buildRandomRounds(activePlayerObjs, courtsValue, futureCount, frozenCount + 1)
+        ? buildRandomRounds(activePlayerObjs, courtsValue, futureCount, frozenCount + 1, sitOutCounts)
         : [];
     } else {
       const activeTeamObjs = eventTeams.filter(t => t.active).map(t => ({ id: t.id, name: t.name }));
+      const orderedTeams = reorderTeamsForFairness(activeTeamObjs, sitOutCounts);
       let futureCount = null;
       if (roundsSettingValue === 'custom') futureCount = Math.max((desiredRoundsTotal || 0) - frozenCount, 0);
       newFutureRounds = activeTeamObjs.length >= 2
-        ? buildDisplayRounds(activeTeamObjs, courtsValue, futureCount, frozenCount + 1)
+        ? buildDisplayRounds(orderedTeams, courtsValue, futureCount, frozenCount + 1)
         : [];
     }
 
