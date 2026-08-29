@@ -390,6 +390,15 @@
 
   <div class="card" id="settingsCard" style="display:none;">
     <h3>Step 3 · Courts &amp; Rounds</h3>
+
+    <div class="field" id="randomizeTeamsField" style="display:none;">
+      <div class="checkbox">
+        <input type="checkbox" id="randomizeTeamsToggle">
+        <label for="randomizeTeamsToggle" style="margin:0;">Randomize partners &amp; opponents every round instead (ignore these fixed pairs)</label>
+      </div>
+      <div class="hint">Uses the same names, but breaks up the pairs above and reshuffles everyone into new teams each round — just like the individual mixer.</div>
+    </div>
+
     <div class="row">
       <div class="field">
         <label for="courts">Number of courts</label>
@@ -471,6 +480,8 @@
   const settingsCard = document.getElementById('settingsCard');
   const teamsRoundsControls = document.getElementById('teamsRoundsControls');
   const individualRoundsControls = document.getElementById('individualRoundsControls');
+  const randomizeTeamsField = document.getElementById('randomizeTeamsField');
+  const randomizeTeamsToggle = document.getElementById('randomizeTeamsToggle');
   const resultsSection = document.getElementById('resultsSection');
   const activeTeamsPanel = document.getElementById('activeTeamsPanel');
   const droppedTeamsWrap = document.getElementById('droppedTeamsWrap');
@@ -552,6 +563,17 @@
   roundsMode.addEventListener('change', () => {
     customRoundsField.style.display = roundsMode.value === 'custom' ? 'block' : 'none';
   });
+
+  // In the "teams" flow, checking this swaps Step 3 over to the same "Number of
+  // rounds" control the individual mixer uses, since a randomized schedule has no
+  // fixed-length "full round robin" cycle to speak of.
+  function updateTeamsRandomizeUI() {
+    const randomize = randomizeTeamsToggle.checked;
+    teamsRoundsControls.style.display = randomize ? 'none' : 'block';
+    customRoundsField.style.display = (!randomize && roundsMode.value === 'custom') ? 'block' : 'none';
+    individualRoundsControls.style.display = randomize ? 'block' : 'none';
+  }
+  randomizeTeamsToggle.addEventListener('change', updateTeamsRandomizeUI);
 
   function showError(msg) {
     errorBox.textContent = msg;
@@ -664,6 +686,7 @@
         setEditPlayers(names);
         editPlayersSection.style.display = 'block';
         editTeamsSection.style.display = 'none';
+        randomizeTeamsField.style.display = 'none';
         individualRoundsControls.style.display = 'block';
         teamsRoundsControls.style.display = 'none';
         customRoundsField.style.display = 'none';
@@ -674,9 +697,9 @@
         setEditTeams(pairs);
         editTeamsSection.style.display = 'block';
         editPlayersSection.style.display = 'none';
-        teamsRoundsControls.style.display = 'block';
-        individualRoundsControls.style.display = 'none';
-        customRoundsField.style.display = roundsMode.value === 'custom' ? 'block' : 'none';
+        randomizeTeamsField.style.display = 'block';
+        randomizeTeamsToggle.checked = false;
+        updateTeamsRandomizeUI();
         step2Heading.textContent = 'Step 2 · Review & Edit Teams';
         step2Hint.textContent = 'Fix a mispaired team, rename a player, add or remove a team. Rebuilding from Step 1 will replace this list.';
       }
@@ -903,15 +926,28 @@
       courtsValue = parseInt(document.getElementById('courts').value, 10);
       if (!courtsValue || courtsValue < 1) throw new Error('Enter at least 1 court.');
 
-      if (mixerMode === 'individual') {
-        const valid = editPlayers.filter(p => p.name.trim());
-        if (valid.length < 4) throw new Error('You need at least 4 players to generate a schedule.');
+      const randomizeTeams = mixerMode === 'teams' && randomizeTeamsToggle.checked;
+
+      if (mixerMode === 'individual' || randomizeTeams) {
+        let names;
+        if (randomizeTeams) {
+          // Same names entered as fixed pairs, but flattened into individuals so
+          // partners AND opponents get reshuffled every round like the random mixer.
+          const validTeams = editTeams.filter(t => t.a.trim() && t.b.trim());
+          if (validTeams.length < 2) throw new Error('You need at least 2 complete teams (4 players) to generate a schedule.');
+          names = validTeams.flatMap(t => [t.a.trim(), t.b.trim()]);
+        } else {
+          const validPlayers = editPlayers.filter(p => p.name.trim());
+          if (validPlayers.length < 4) throw new Error('You need at least 4 players to generate a schedule.');
+          names = validPlayers.map(p => p.name.trim());
+        }
         desiredRoundsTotal = parseInt(document.getElementById('individualRounds').value, 10);
         if (!desiredRoundsTotal || desiredRoundsTotal < 1) throw new Error('Enter a valid number of rounds.');
         roundsSettingValue = 'custom';
 
-        eventPlayers = valid.map(p => ({ id: p.id, name: p.name.trim(), active: true }));
+        eventPlayers = names.map(name => ({ id: nextEditId++, name, active: true }));
         eventTeams = [];
+        mixerMode = 'individual'; // the live mixer now runs exactly like the individual mode from here on
         displayRounds = buildRandomRounds(eventPlayers, courtsValue, desiredRoundsTotal, 1, {});
       } else {
         const valid = editTeams.filter(t => t.a.trim() && t.b.trim());
