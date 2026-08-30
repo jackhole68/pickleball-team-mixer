@@ -347,13 +347,9 @@
     </div>
 
     <div class="field" id="teamsField" style="display:none;">
-      <label for="teamsInput" id="teamsFieldLabel">Teams (one per line, format: Player A / Player B)</label>
-      <div class="hint" id="teamsFieldHint">Use a slash, comma, or "&" to separate the two partners on a team.</div>
-      <textarea id="teamsInput" placeholder="Alex / Jamie&#10;Sam / Taylor&#10;Jordan / Casey&#10;Morgan / Riley"></textarea>
-      <div class="checkbox" style="margin-top:8px;">
-        <input type="checkbox" id="teamsAsIndividualsToggle">
-        <label for="teamsAsIndividualsToggle" style="margin:0;">These are individual players, not paired yet — randomly pair them each round instead</label>
-      </div>
+      <label for="teamsInput">Teams (one per line) — or solo players to be paired up</label>
+      <div class="hint">Pair two names with "/", ",", or "&". Got someone without a partner yet? Just put their name on its own line — any unpaired solo players will be randomly paired with each other to fill out the teams, while everyone you already paired stays together.</div>
+      <textarea id="teamsInput" placeholder="Alex / Jamie&#10;Sam / Taylor&#10;Jordan&#10;Casey"></textarea>
     </div>
 
     <div class="actions">
@@ -466,9 +462,6 @@
   const modeRadios = document.querySelectorAll('input[name="mode"]');
   const individualField = document.getElementById('individualField');
   const teamsField = document.getElementById('teamsField');
-  const teamsFieldLabel = document.getElementById('teamsFieldLabel');
-  const teamsFieldHint = document.getElementById('teamsFieldHint');
-  const teamsAsIndividualsToggle = document.getElementById('teamsAsIndividualsToggle');
   const playersTextarea = document.getElementById('players');
   const teamsTextarea = document.getElementById('teamsInput');
   const buildTeamsBtn = document.getElementById('buildTeamsBtn');
@@ -562,30 +555,9 @@
     const mode = document.querySelector('input[name="mode"]:checked').value;
     individualField.style.display = mode === 'individual' ? 'block' : 'none';
     teamsField.style.display = mode === 'teams' ? 'block' : 'none';
-    updateTeamsFieldFormat();
+    buildTeamsBtn.textContent = mode === 'individual' ? 'Add Players →' : 'Build Teams →';
   }
   modeRadios.forEach(r => r.addEventListener('change', applyModeUI));
-
-  // Within the "teams" flow, this checkbox switches the same box between "enter
-  // fixed pairs" and "enter individual players to randomly pair" — so you don't
-  // have to fake up pairs (or switch to the other radio) just to use random mode.
-  function updateTeamsFieldFormat() {
-    const mode = document.querySelector('input[name="mode"]:checked').value;
-    if (mode === 'individual') {
-      buildTeamsBtn.textContent = 'Add Players →';
-      return;
-    }
-    if (teamsAsIndividualsToggle.checked) {
-      teamsFieldLabel.textContent = 'Players (one per line, not yet paired)';
-      teamsFieldHint.textContent = 'They’ll be randomly paired into new teams each round.';
-      buildTeamsBtn.textContent = 'Add Players →';
-    } else {
-      teamsFieldLabel.textContent = 'Teams (one per line, format: Player A / Player B)';
-      teamsFieldHint.textContent = 'Use a slash, comma, or "&" to separate the two partners on a team.';
-      buildTeamsBtn.textContent = 'Build Teams →';
-    }
-  }
-  teamsAsIndividualsToggle.addEventListener('change', updateTeamsFieldFormat);
   applyModeUI();
 
   roundsMode.addEventListener('change', () => {
@@ -627,27 +599,33 @@
     if (players.length < 4) throw new Error('Enter at least 4 players.');
     return players;
   }
+  // Explicit pairs ("Alex / Jamie") become fixed teams as-is. A line with just one
+  // name is a "solo" player without a partner yet — those get shuffled and paired
+  // up with each other (once, at build time) so everyone already paired stays
+  // together, and only the leftover solos get mixed.
   function parseTeamsInputPairs() {
-    const pairs = teamsTextarea.value.split('\n').map(s => s.trim()).filter(Boolean).map(line => {
+    const lines = teamsTextarea.value.split('\n').map(s => s.trim()).filter(Boolean);
+    const pairs = [];
+    const solos = [];
+    lines.forEach(line => {
       const parts = line.split(/\s*[\/,&]\s*|\s+and\s+/i).map(s => s.trim()).filter(Boolean);
-      if (parts.length < 2) return null;
-      return { a: parts[0], b: parts[1] };
+      if (parts.length === 2) {
+        pairs.push({ a: parts[0], b: parts[1] });
+      } else {
+        parts.forEach(p => solos.push(p));
+      }
     });
-    if (pairs.some(p => p === null)) throw new Error('Each team line needs two names separated by "/", ",", "&", or "and".');
-    if (pairs.length < 2) throw new Error('Enter at least 2 teams.');
+
+    if (solos.length % 2 !== 0) {
+      throw new Error(`You have ${solos.length} solo player(s) without a partner — add one more, or pair one of them up with "/" so everyone has a partner.`);
+    }
+    const shuffledSolos = shuffleArray(solos);
+    for (let i = 0; i < shuffledSolos.length; i += 2) {
+      pairs.push({ a: shuffledSolos[i], b: shuffledSolos[i + 1] });
+    }
+
+    if (pairs.length < 2) throw new Error('Enter at least 2 teams (pairs and/or solo players to be paired up).');
     return pairs;
-  }
-  // Lenient version for the "these are individuals" toggle: accepts one name per
-  // line, but if a line still has a "/"-style separator on it (e.g. left over from
-  // switching modes), splits it so both names come through instead of being
-  // treated as one combined name.
-  function parseNamesLenient(text) {
-    const names = [];
-    text.split('\n').map(s => s.trim()).filter(Boolean).forEach(line => {
-      line.split(/\s*[\/,&]\s*|\s+and\s+/i).map(s => s.trim()).filter(Boolean).forEach(n => names.push(n));
-    });
-    if (names.length < 4) throw new Error('Enter at least 4 players.');
-    return names;
   }
 
   // ---------- Step 2: editable lists ----------
@@ -721,10 +699,8 @@
     const mode = document.querySelector('input[name="mode"]:checked').value;
     mixerMode = mode;
     try {
-      const asIndividuals = mode === 'teams' && teamsAsIndividualsToggle.checked;
-      if (mode === 'individual' || asIndividuals) {
-        const names = asIndividuals ? parseNamesLenient(teamsTextarea.value) : parsePlayersOnly();
-        mixerMode = 'individual';
+      if (mode === 'individual') {
+        const names = parsePlayersOnly();
         setEditPlayers(names);
         editPlayersSection.style.display = 'block';
         editTeamsSection.style.display = 'none';
