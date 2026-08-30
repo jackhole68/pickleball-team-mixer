@@ -348,7 +348,7 @@
 
     <div class="field" id="teamsField" style="display:none;">
       <label for="teamsInput">Teams (one per line) — or solo players to be paired up</label>
-      <div class="hint">Pair two names with "/", ",", or "&". Got someone without a partner yet? Just put their name on its own line — any unpaired solo players will be randomly paired with each other to fill out the teams, while everyone you already paired stays together.</div>
+      <div class="hint">Pair two names with "/", ",", or "&". Got someone without a partner yet? Just put their name on its own line — an even number of these get randomly paired once; an odd number instead rotate who sits out each round. Everyone you already paired stays together either way.</div>
       <textarea id="teamsInput" placeholder="Alex / Jamie&#10;Sam / Taylor&#10;Jordan&#10;Casey"></textarea>
     </div>
 
@@ -384,6 +384,15 @@
         <button class="secondary small" id="loadRosterBtn">Load</button>
         <button class="secondary small" id="saveRosterBtn">Save this roster as…</button>
         <button class="danger small" id="deleteRosterBtn">Delete</button>
+      </div>
+
+      <div id="editFloatersWrap" style="margin-top:18px; padding-top:16px; border-top:1px dashed var(--border);">
+        <label style="margin-bottom:2px;">Unpaired players</label>
+        <p class="hint" style="margin-top:0;">No fixed partner yet. An even number get randomly paired into teams once. An odd number instead rotate — one sits out each round while the rest get a game, fairly taking turns.</p>
+        <div id="editFloatersList"></div>
+        <div class="actions">
+          <button class="secondary small" id="addFloaterBtn" type="button">+ Add Unpaired Player</button>
+        </div>
       </div>
     </div>
   </div>
@@ -474,6 +483,7 @@
   const editTeamsSection = document.getElementById('editTeamsSection');
   const editPlayersSection = document.getElementById('editPlayersSection');
   const editTeamsList = document.getElementById('editTeamsList');
+  const editFloatersList = document.getElementById('editFloatersList');
   const editPlayersList = document.getElementById('editPlayersList');
   const savedTeamRostersSelect = document.getElementById('savedTeamRosters');
   const savedPlayerListsSelect = document.getElementById('savedPlayerLists');
@@ -540,9 +550,11 @@
   // ---------- state ----------
   let mixerMode = 'individual'; // 'individual' | 'teams' — which flow Step 2/3 currently reflect
   let editTeams = [];    // [{id, a, b}]
+  let editFloaters = []; // [{id, name}] — unpaired players in the teams flow
   let editPlayers = [];  // [{id, name}]
   let nextEditId = 1;
-  let eventTeams = [];    // [{id, name, active}] — teams-mode roster for the live mixer
+  let eventTeams = [];    // [{id, name, active}] — teams-mode roster (fixed teams) for the live mixer
+  let eventFloaters = []; // [{id, name, active}] — odd leftover unpaired players who rotate sitting out
   let eventPlayers = [];  // [{id, name, active}] — individual-mode roster for the live mixer
   let displayRounds = []; // [{roundNumber, heats:[[{a:{name},b:{name}}...]], byes:[{name}]}]
   let roundStates = [];   // booleans, parallel to displayRounds
@@ -600,9 +612,9 @@
     return players;
   }
   // Explicit pairs ("Alex / Jamie") become fixed teams as-is. A line with just one
-  // name is a "solo" player without a partner yet — those get shuffled and paired
-  // up with each other (once, at build time) so everyone already paired stays
-  // together, and only the leftover solos get mixed.
+  // name is a solo player without a partner yet — those are returned separately so
+  // Step 2/3 can decide how to handle them (paired once if even, rotating sit-outs
+  // if odd), based on however the user edits the lists afterward.
   function parseTeamsInputPairs() {
     const lines = teamsTextarea.value.split('\n').map(s => s.trim()).filter(Boolean);
     const pairs = [];
@@ -615,17 +627,8 @@
         parts.forEach(p => solos.push(p));
       }
     });
-
-    if (solos.length % 2 !== 0) {
-      throw new Error(`You have ${solos.length} solo player(s) without a partner — add one more, or pair one of them up with "/" so everyone has a partner.`);
-    }
-    const shuffledSolos = shuffleArray(solos);
-    for (let i = 0; i < shuffledSolos.length; i += 2) {
-      pairs.push({ a: shuffledSolos[i], b: shuffledSolos[i + 1] });
-    }
-
-    if (pairs.length < 2) throw new Error('Enter at least 2 teams (pairs and/or solo players to be paired up).');
-    return pairs;
+    if (pairs.length * 2 + solos.length < 4) throw new Error('Enter at least 4 players (as teams and/or unpaired players).');
+    return { pairs, solos };
   }
 
   // ---------- Step 2: editable lists ----------
@@ -659,6 +662,37 @@
         const id = parseInt(btn.dataset.id, 10);
         editTeams = editTeams.filter(t => t.id !== id);
         renderEditTeams();
+      });
+    });
+  }
+
+  function setEditFloaters(names) {
+    editFloaters = names.map(n => ({ id: nextEditId++, name: n }));
+    renderEditFloaters();
+  }
+  function renderEditFloaters() {
+    editFloatersList.innerHTML = '';
+    editFloaters.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'edit-player-row';
+      row.innerHTML = `
+        <input type="text" value="${escapeHtml(p.name)}" data-id="${p.id}" placeholder="Player name">
+        <button class="remove-team" type="button" data-id="${p.id}">✕ Remove</button>
+      `;
+      editFloatersList.appendChild(row);
+    });
+    editFloatersList.querySelectorAll('input[type=text]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const id = parseInt(inp.dataset.id, 10);
+        const p = editFloaters.find(x => x.id === id);
+        if (p) p.name = inp.value;
+      });
+    });
+    editFloatersList.querySelectorAll('.remove-team').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.dataset.id, 10);
+        editFloaters = editFloaters.filter(p => p.id !== id);
+        renderEditFloaters();
       });
     });
   }
@@ -711,8 +745,9 @@
         step2Heading.textContent = 'Step 2 · Review & Edit Players';
         step2Hint.textContent = 'Fix a typo, add or remove a player. Rebuilding from Step 1 will replace this list.';
       } else {
-        const pairs = parseTeamsInputPairs();
+        const { pairs, solos } = parseTeamsInputPairs();
         setEditTeams(pairs);
+        setEditFloaters(solos);
         editTeamsSection.style.display = 'block';
         editPlayersSection.style.display = 'none';
         randomizeTeamsField.style.display = 'block';
@@ -732,6 +767,10 @@
   document.getElementById('addTeamBtn').addEventListener('click', () => {
     editTeams.push({ id: nextEditId++, a: '', b: '' });
     renderEditTeams();
+  });
+  document.getElementById('addFloaterBtn').addEventListener('click', () => {
+    editFloaters.push({ id: nextEditId++, name: '' });
+    renderEditFloaters();
   });
   document.getElementById('addPlayerBtn').addEventListener('click', () => {
     editPlayers.push({ id: nextEditId++, name: '' });
@@ -880,6 +919,91 @@
     return result;
   }
 
+  // ---------- unpaired ("floater") players in the teams flow ----------
+  // Used when there's no fixed-team schedule to attach floaters to (e.g. all
+  // entered players are unpaired). Produces bare rounds with no matches yet.
+  function createEmptyRounds(n, startRoundNumber) {
+    const rounds = [];
+    for (let i = 0; i < n; i++) rounds.push({ roundNumber: startRoundNumber + i, heats: [[]], byes: [] });
+    return rounds;
+  }
+
+  // Weaves an odd-sized pool of unpaired players into an already-built fixed-team
+  // schedule, in place. Every round, exactly one floater sits out (whoever has sat
+  // out the fewest times so far), and the rest are shuffled and paired up fresh —
+  // new partners each round, since there's no fixed pairing to preserve for them.
+  // If that leaves one pair with no other floater-pair to play, they get a match
+  // against whichever fixed team has faced the floater pool the least so far, added
+  // as an extra heat so it never overlaps a team's own regularly-scheduled match.
+  function mergeFloatingPoolIntoRounds(rounds, floaters, fixedTeams, initialSitOutCounts, initialBorrowCounts) {
+    const sitOutCounts = {};
+    floaters.forEach(f => { sitOutCounts[f.id] = (initialSitOutCounts && initialSitOutCounts[f.id]) || 0; });
+    const borrowCounts = {};
+    fixedTeams.forEach(t => { borrowCounts[t.id] = (initialBorrowCounts && initialBorrowCounts[t.id]) || 0; });
+
+    rounds.forEach(round => {
+      const byFewestSitOuts = floaters.slice().sort((a, b) => sitOutCounts[a.id] - sitOutCounts[b.id]);
+      const sittingOut = byFewestSitOuts.slice(0, 1);
+      sittingOut.forEach(f => { sitOutCounts[f.id] += 1; });
+      const sittingIds = new Set(sittingOut.map(f => f.id));
+      const playing = shuffleArray(floaters.filter(f => !sittingIds.has(f.id)));
+
+      const pairs = [];
+      for (let i = 0; i < playing.length; i += 2) pairs.push([playing[i], playing[i + 1]]);
+
+      const extraMatches = [];
+      let leftoverPair = null;
+      for (let i = 0; i < pairs.length; i += 2) {
+        if (i + 1 < pairs.length) {
+          extraMatches.push({
+            a: { name: `${pairs[i][0].name} & ${pairs[i][1].name}` },
+            b: { name: `${pairs[i + 1][0].name} & ${pairs[i + 1][1].name}` }
+          });
+        } else {
+          leftoverPair = pairs[i];
+        }
+      }
+      if (leftoverPair) {
+        const opponent = fixedTeams.slice().sort((a, b) => borrowCounts[a.id] - borrowCounts[b.id])[0];
+        borrowCounts[opponent.id] += 1;
+        extraMatches.push({
+          a: { name: `${leftoverPair[0].name} & ${leftoverPair[1].name}` },
+          b: { name: opponent.name }
+        });
+      }
+
+      extraMatches.forEach(m => round.heats.push([m]));
+      round.byes = round.byes.concat(sittingOut.map(f => ({ id: f.id, name: f.name })));
+    });
+  }
+
+  // Decides what to do with unpaired ("floater") names: an even number get shuffled
+  // and paired into fixed teams once (returned as pairedTeams); an odd number
+  // become a genuinely rotating pool instead (returned as pool). Throws if that
+  // rotation isn't actually playable — a lone floater has no one to pair with at
+  // all, and a pool that always leaves one extra pair (3, 7, 11, ...) needs at
+  // least one fixed team for that pair to play against.
+  function resolveFloaters(floaterNames, fixedTeamCount) {
+    if (floaterNames.length === 0) return { pairedTeams: [], pool: [] };
+    if (floaterNames.length % 2 === 0) {
+      const shuffled = shuffleArray(floaterNames);
+      const pairedTeams = [];
+      for (let i = 0; i < shuffled.length; i += 2) {
+        pairedTeams.push({ id: nextEditId++, name: `${shuffled[i]} & ${shuffled[i + 1]}` });
+      }
+      return { pairedTeams, pool: [] };
+    }
+    if (floaterNames.length === 1) {
+      throw new Error('One unpaired player has no one to be paired with — add at least one more unpaired player, or pair them up with "/".');
+    }
+    const pairsFromFloaters = (floaterNames.length - 1) / 2;
+    const needsBorrowedOpponent = pairsFromFloaters % 2 === 1;
+    if (needsBorrowedOpponent && fixedTeamCount === 0) {
+      throw new Error(`With ${floaterNames.length} unpaired players and no fixed teams, there's always one extra pair with no one to play — add a fixed team, or add/remove one unpaired player.`);
+    }
+    return { pairedTeams: [], pool: floaterNames.map(name => ({ id: nextEditId++, name })) };
+  }
+
   // ---------- fully random individual mixer ----------
   // Tallies how many times each participant has already sat out, from a set of
   // already-generated rounds (their byes always carry {id}). Shared by both mixer
@@ -965,11 +1089,16 @@
 
         eventPlayers = names.map(name => ({ id: nextEditId++, name, active: true }));
         eventTeams = [];
+        eventFloaters = [];
         mixerMode = 'individual'; // the live mixer now runs exactly like the individual mode from here on
         displayRounds = buildRandomRounds(eventPlayers, courtsValue, desiredRoundsTotal, 1, {});
       } else {
-        const valid = editTeams.filter(t => t.a.trim() && t.b.trim());
-        if (valid.length < 2) throw new Error('You need at least 2 complete teams to generate a schedule.');
+        const validPairs = editTeams.filter(t => t.a.trim() && t.b.trim());
+        const validFloaterNames = editFloaters.filter(p => p.name.trim()).map(p => p.name.trim());
+        if (validPairs.length === 0 && validFloaterNames.length === 0) {
+          throw new Error('You need at least 2 complete teams to generate a schedule.');
+        }
+
         roundsSettingValue = roundsMode.value;
         desiredRoundsTotal = null;
         if (roundsSettingValue === 'custom') {
@@ -977,10 +1106,31 @@
           if (!desiredRoundsTotal || desiredRoundsTotal < 1) throw new Error('Enter a valid number of rounds.');
         }
 
-        eventTeams = valid.map(t => ({ id: t.id, name: `${t.a.trim()} & ${t.b.trim()}`, active: true }));
+        const explicitTeamSpecs = validPairs.map(t => ({ id: t.id, name: `${t.a.trim()} & ${t.b.trim()}` }));
+        const { pairedTeams, pool } = resolveFloaters(validFloaterNames, explicitTeamSpecs.length);
+        const fixedTeamSpecs = explicitTeamSpecs.concat(pairedTeams);
+
+        if (fixedTeamSpecs.length < 2 && pool.length === 0) {
+          throw new Error('You need at least 2 complete teams to generate a schedule.');
+        }
+        if (fixedTeamSpecs.length < 2 && roundsSettingValue === 'full') {
+          throw new Error('Select "Custom number of rounds" — there\'s no fixed cycle length with fewer than 2 fixed teams.');
+        }
+
+        eventTeams = fixedTeamSpecs.map(t => ({ id: t.id, name: t.name, active: true }));
+        eventFloaters = pool.map(f => ({ id: f.id, name: f.name, active: true }));
         eventPlayers = [];
-        const orderedTeams = reorderTeamsForFairness(eventTeams, {});
-        displayRounds = buildDisplayRounds(orderedTeams, courtsValue, desiredRoundsTotal, 1);
+
+        if (eventTeams.length >= 2) {
+          const orderedTeams = reorderTeamsForFairness(eventTeams, {});
+          displayRounds = buildDisplayRounds(orderedTeams, courtsValue, desiredRoundsTotal, 1);
+        } else {
+          displayRounds = createEmptyRounds(desiredRoundsTotal, 1);
+        }
+
+        if (eventFloaters.length > 0) {
+          mergeFloatingPoolIntoRounds(displayRounds, eventFloaters, eventTeams, {}, {});
+        }
       }
 
       roundStates = displayRounds.map(() => false);
@@ -995,7 +1145,7 @@
 
   // ---------- active participants / drop mid-event ----------
   function renderActiveParticipantsPanel() {
-    const list = mixerMode === 'individual' ? eventPlayers : eventTeams;
+    const list = mixerMode === 'individual' ? eventPlayers : eventTeams.concat(eventFloaters);
     activeTeamsPanel.innerHTML = '';
     list.filter(p => p.active).forEach(p => {
       const chip = document.createElement('span');
@@ -1034,12 +1184,38 @@
         : [];
     } else {
       const activeTeamObjs = eventTeams.filter(t => t.active).map(t => ({ id: t.id, name: t.name }));
-      const orderedTeams = reorderTeamsForFairness(activeTeamObjs, sitOutCounts);
+      const activeFloaterNames = eventFloaters.filter(f => f.active).map(f => f.name);
+
+      // Re-decide the floater pool fresh, same as at Generate time: if dropping/
+      // adding brought them to an even count, pair them into new fixed teams now;
+      // otherwise they keep rotating as a pool.
+      let workingTeams = activeTeamObjs;
+      let workingFloaterPool = [];
+      if (activeFloaterNames.length > 0) {
+        if (activeFloaterNames.length % 2 === 0) {
+          const shuffled = shuffleArray(activeFloaterNames);
+          const newlyPaired = [];
+          for (let i = 0; i < shuffled.length; i += 2) {
+            newlyPaired.push({ id: nextEditId++, name: `${shuffled[i]} & ${shuffled[i + 1]}`, active: true });
+          }
+          eventFloaters.forEach(f => { if (f.active) f.active = false; }); // absorbed into the new fixed teams
+          eventTeams = eventTeams.concat(newlyPaired);
+          workingTeams = activeTeamObjs.concat(newlyPaired.map(t => ({ id: t.id, name: t.name })));
+        } else {
+          workingFloaterPool = eventFloaters.filter(f => f.active).map(f => ({ id: f.id, name: f.name }));
+        }
+      }
+
+      const orderedTeams = reorderTeamsForFairness(workingTeams, sitOutCounts);
       let futureCount = null;
       if (roundsSettingValue === 'custom') futureCount = Math.max((desiredRoundsTotal || 0) - frozenCount, 0);
-      newFutureRounds = activeTeamObjs.length >= 2
+      newFutureRounds = workingTeams.length >= 2
         ? buildDisplayRounds(orderedTeams, courtsValue, futureCount, frozenCount + 1)
-        : [];
+        : createEmptyRounds(Math.max((desiredRoundsTotal || 0) - frozenCount, 0), frozenCount + 1);
+
+      if (workingFloaterPool.length > 0) {
+        mergeFloatingPoolIntoRounds(newFutureRounds, workingFloaterPool, workingTeams, sitOutCounts, {});
+      }
     }
 
     displayRounds = frozenRounds.concat(newFutureRounds);
@@ -1047,7 +1223,7 @@
   }
 
   function dropParticipant(id) {
-    const list = mixerMode === 'individual' ? eventPlayers : eventTeams;
+    const list = mixerMode === 'individual' ? eventPlayers : eventTeams.concat(eventFloaters);
     const participant = list.find(p => p.id === id && p.active);
     if (!participant) return;
     if (!confirm(`Remove ${participant.name} from the mixer? They'll be gone starting next round — rounds already played or in progress stay as-is.`)) return;
