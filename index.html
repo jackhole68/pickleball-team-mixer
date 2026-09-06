@@ -881,7 +881,10 @@
     }
     const rounds = [];
     roundsToUse.forEach((roundPairs, i) => {
-      const matches = roundPairs.filter(p => p[0] !== -1 && p[1] !== -1).map(p => ({ a: teamObjs[p[0]], b: teamObjs[p[1]] }));
+      // The round-robin algorithm always places the same team's match first in
+      // roundPairs (it never rotates position). Shuffle before assigning court
+      // numbers so nobody gets stuck on "Court 1" (or any single court) every round.
+      const matches = shuffleArray(roundPairs.filter(p => p[0] !== -1 && p[1] !== -1).map(p => ({ a: teamObjs[p[0]], b: teamObjs[p[1]] })));
       const byes = roundPairs.filter(p => p[1] === -1).map(p => teamObjs[p[0]]);
       const heats = [];
       for (let k = 0; k < matches.length; k += courts) heats.push(matches.slice(k, k + courts));
