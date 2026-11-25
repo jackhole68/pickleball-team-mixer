@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pickleball Team Mixer</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Crect x='42' y='38' width='10' height='20' rx='4' fill='%233a3a3a'/%3E%3Crect x='18' y='4' width='38' height='46' rx='16' fill='%23b3272d' stroke='%238c1f24' stroke-width='2'/%3E%3Ccircle cx='78' cy='40' r='14' fill='%23e8e8e8' stroke='%239a9a9a' stroke-width='1.5'/%3E%3Ccircle cx='72' cy='34' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='82' cy='33' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='86' cy='41' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='78' cy='47' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='70' cy='44' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='78' cy='40' r='1.6' fill='%239a9a9a'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="theme-color" content="#b3272d">
+<meta name="theme-color" content="#0d1838">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -69,29 +69,37 @@
 
   /* Header */
   .card.logo-wrap {
-    width: min(100%, 360px);
-    margin: 6px auto 0;
-    padding: 10px 16px;
-    background: #fff;
+    width: min(100%, 230px);
+    margin: 0 auto;
+    padding: 0;
+    background: transparent;
     border: none;
-    border-radius: 28px;
-    box-shadow: 0 0 0 4px var(--ball), 0 18px 40px rgba(0, 0, 0, 0.35);
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
     text-align: center;
   }
   .logo-img {
     display: block;
     width: 100%;
     height: auto;
-    aspect-ratio: 8 / 5;
-    object-fit: cover;
-    object-position: 50% 52%;
+    aspect-ratio: 1;
+    filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.45));
+  }
+  .tagline {
+    margin: 0 0 6px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ball);
   }
   .card.sub-card {
     text-align: center;
     background: transparent;
     border: none;
     box-shadow: none;
-    padding: 18px 8px 4px;
+    padding: 14px 8px 4px;
     margin-bottom: 26px;
   }
   .sub { color: rgba(255,255,255,0.85); margin: 0 auto; font-size: 0.9rem; max-width: 32em; font-weight: 500; }
@@ -480,7 +488,8 @@
       linear-gradient(180deg, var(--navy) 0, var(--navy-2) 380px, var(--page) 380px); }
     .card { padding: 20px 16px; border-radius: 18px; }
     .card h3 { margin: -20px -16px 0; padding: 14px 16px; }
-    .card.logo-wrap { width: min(100%, 290px); padding: 8px 12px; }
+    .card.logo-wrap { width: min(100%, 180px); }
+    .tagline { font-size: 0.62rem; letter-spacing: 0.05em; }
     .radio-group { grid-template-columns: 1fr; }
     .row { gap: 0 12px; }
     .row > div { min-width: 130px; }
@@ -501,7 +510,8 @@
     .round-body { display: block !important; }
     .round .round-header, .round.locked .round-header { background: var(--navy) !important; color: #fff !important; }
     body { padding: 0; background: #fff !important; }
-    .card.logo-wrap { box-shadow: none; }
+    .logo-img { filter: none; }
+    .tagline { color: var(--navy); }
     .round { break-inside: avoid; box-shadow: none; }
     td { background: #fff !important; }
     td:first-child { color: var(--navy) !important; }
@@ -511,9 +521,10 @@
 <body>
 <div class="wrap">
   <div class="card logo-wrap">
-    <img class="logo-img" src="assets/mxd-pb-logo.jpg" alt="Mixed Pickleball logo">
+    <img class="logo-img" src="assets/mxd-pb-badge.png" alt="MXD-PB Mixed Pickleball">
   </div>
   <div class="card sub-card">
+    <p class="tagline">You bring the people. We make the game.</p>
     <p class="sub">Fixed teams with rotating opponents, or a fully random individual mixer — build a court schedule for your event.</p>
   </div>
 
