@@ -688,6 +688,7 @@
         const p = editFloaters.find(x => x.id === id);
         if (p) p.name = inp.value;
       });
+      inp.addEventListener('keydown', (e) => handleNameEnter(e, editFloatersList, addEditFloater));
     });
     editFloatersList.querySelectorAll('.remove-team').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -719,6 +720,7 @@
         const p = editPlayers.find(x => x.id === id);
         if (p) p.name = inp.value;
       });
+      inp.addEventListener('keydown', (e) => handleNameEnter(e, editPlayersList, addEditPlayer));
     });
     editPlayersList.querySelectorAll('.remove-team').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -769,14 +771,37 @@
     editTeams.push({ id: nextEditId++, a: '', b: '' });
     renderEditTeams();
   });
-  document.getElementById('addFloaterBtn').addEventListener('click', () => {
+  // Enter in a name box: move to the next name box, or add a new one (with the
+  // cursor in it) when on the last box. An empty last box stays put, so holding
+  // Enter doesn't pile up blank rows.
+  function handleNameEnter(e, listEl, addFn) {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    e.preventDefault();
+    const inputs = Array.from(listEl.querySelectorAll('input[type=text]'));
+    const i = inputs.indexOf(e.target);
+    if (i >= 0 && i < inputs.length - 1) { inputs[i + 1].focus(); return; }
+    if (!e.target.value.trim()) return;
+    addFn();
+  }
+  function focusLastName(listEl) {
+    const inputs = listEl.querySelectorAll('input[type=text]');
+    const last = inputs[inputs.length - 1];
+    if (!last) return;
+    last.focus();
+    last.scrollIntoView({ block: 'nearest' });
+  }
+  function addEditFloater() {
     editFloaters.push({ id: nextEditId++, name: '' });
     renderEditFloaters();
-  });
-  document.getElementById('addPlayerBtn').addEventListener('click', () => {
+    focusLastName(editFloatersList);
+  }
+  function addEditPlayer() {
     editPlayers.push({ id: nextEditId++, name: '' });
     renderEditPlayers();
-  });
+    focusLastName(editPlayersList);
+  }
+  document.getElementById('addFloaterBtn').addEventListener('click', addEditFloater);
+  document.getElementById('addPlayerBtn').addEventListener('click', addEditPlayer);
 
   // ---------- saved team rosters ----------
   refreshRosterDropdown();
