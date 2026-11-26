@@ -8,43 +8,46 @@
 
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="theme-color" content="#0d1838">
+<meta name="theme-color" content="#121213">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MXD-PB Mixer">
 <style>
-  /* Look: night-court navy hero, brand red for actions, optic-yellow ball as the highlight. */
+  /* Look: dark mode in the original MXD-PB colors: brand red on charcoal, with the logo's cream as the highlight. */
   :root {
-    --navy: #0d1838;
-    --navy-2: #172a63;
-    --blue: #2550d9;
-    --red: #d1242f;
-    --red-dark: #a3161f;
-    --ball: #dcf542;
-    --ball-dark: #b8d21c;
-    --cream: #f4ecd9;
-    --green: #17a05d;
-    --green-dark: #0f7a45;
-    --page: #eef1f8;
-    --card: #ffffff;
-    --line: #dde2ee;
-    --line-strong: #c4cbdd;
-    --text: #121a33;
-    --muted: #5d6680;
-    --tint-red: #fdebec;
-    --tint-blue: #eaf0ff;
+    --navy: #1e1e20;
+    --navy-2: #141415;
+    --blue: #3a1416;
+    --red: #b3272d;
+    --red-dark: #8c1f24;
+    --red-bright: #d23a40;
+    --ball: #efe6d4;
+    --ball-dark: #d9ccb2;
+    --cream: #efe6d4;
+    --green: #4caf6e;
+    --green-dark: #2f7d4a;
+    --page: #121213;
+    --card: #1d1d1f;
+    --surface-2: #26262a;
+    --line: #333338;
+    --line-strong: #4a4a50;
+    --text: #ececec;
+    --muted: #9a9a9a;
+    --tint-red: #3a1a1c;
+    --tint-blue: #26262a;
     --radius: 20px;
     --radius-sm: 12px;
-    --shadow: 0 2px 4px rgba(13, 24, 56, 0.06), 0 12px 32px rgba(13, 24, 56, 0.12);
-    --focus: 0 0 0 3px rgba(37, 80, 217, 0.3);
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.35);
+    --focus: 0 0 0 3px rgba(210, 58, 64, 0.45);
     /* legacy names still referenced inline in the markup */
     --border: var(--line);
     --ocean: var(--red);
-    --ocean-dark: var(--navy);
-    --ocean-light: #f19aa0;
+    --ocean-dark: var(--text);
+    --ocean-light: #e3a6a8;
     --coral: var(--red);
     --coral-dark: var(--red-dark);
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
   html { font-size: 125%; -webkit-text-size-adjust: 100%; }
@@ -57,9 +60,9 @@
     background-image:
       linear-gradient(90deg, transparent calc(50% - 1px), rgba(255,255,255,0.06) calc(50% - 1px), rgba(255,255,255,0.06) calc(50% + 1px), transparent calc(50% + 1px)),
       linear-gradient(180deg, transparent 150px, rgba(255,255,255,0.10) 150px, rgba(255,255,255,0.10) 152px, transparent 152px),
-      radial-gradient(900px 420px at 85% -60px, rgba(37, 80, 217, 0.55), transparent 70%),
-      radial-gradient(700px 380px at 0% 40px, rgba(209, 36, 47, 0.35), transparent 70%),
-      linear-gradient(180deg, var(--navy) 0, var(--navy-2) 430px, var(--page) 430px);
+      radial-gradient(900px 420px at 85% -60px, rgba(179, 39, 45, 0.45), transparent 70%),
+      radial-gradient(700px 380px at 0% 40px, rgba(179, 39, 45, 0.18), transparent 70%),
+      linear-gradient(180deg, #0b0b0c 0, #1a1a1c 430px, var(--page) 430px);
     background-repeat: no-repeat;
     background-size: 100% 430px, 100% 430px, 100% 430px, 100% 430px, 100% 100%;
     padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 80px max(16px, env(safe-area-inset-left));
@@ -92,7 +95,7 @@
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--ball);
+    color: var(--cream);
   }
   .card.sub-card {
     text-align: center;
@@ -117,12 +120,12 @@
   .card h3 {
     margin: -22px -24px 0;
     padding: 16px 24px;
-    background: linear-gradient(100deg, var(--navy) 0%, var(--navy-2) 70%, var(--blue) 130%);
+    background: linear-gradient(100deg, #2a2a2d 0%, #202022 60%, #3a1416 120%);
     color: #fff;
     font-size: 1.05rem;
     font-weight: 800;
     letter-spacing: 0.01em;
-    border-bottom: 4px solid var(--ball);
+    border-bottom: 4px solid var(--red);
   }
   .card h3 + .card-hint, .card h3 + .field, .card h3 + .row { margin-top: 16px; }
   .card-hint { color: var(--muted); font-size: 0.82rem; margin: 0 0 18px; }
@@ -138,15 +141,15 @@
     border-radius: var(--radius-sm);
     font-size: 0.95rem;
     font-family: inherit;
-    background: #f8f9fd;
+    background: #151517;
     color: var(--text);
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
-  textarea::placeholder, input::placeholder { color: #9aa2b8; }
+  textarea::placeholder, input::placeholder { color: #6a6a70; }
   textarea:focus, input:focus, select:focus {
     outline: none;
-    background: #fff;
-    border-color: var(--blue);
+    background: #18181a;
+    border-color: var(--red-bright);
     box-shadow: var(--focus);
   }
   textarea { min-height: 160px; resize: vertical; line-height: 1.5; }
@@ -167,23 +170,23 @@
     padding: 14px;
     border: 2px solid var(--line);
     border-radius: var(--radius-sm);
-    background: #f8f9fd;
+    background: #151517;
     transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
   }
   .radio-group label:hover { border-color: var(--line-strong); }
   .radio-group label:has(input:checked) {
-    border-color: var(--navy);
-    background: var(--navy);
+    border-color: var(--red);
+    background: var(--red);
     color: #fff;
-    box-shadow: inset 0 -4px 0 var(--ball);
+    box-shadow: inset 0 -4px 0 var(--cream);
   }
-  .radio-group input { margin: 2px 0 0; flex: none; width: 20px; height: 20px; accent-color: var(--ball-dark); }
+  .radio-group input { margin: 2px 0 0; flex: none; width: 20px; height: 20px; accent-color: var(--cream); }
   .checkbox { display: flex; align-items: flex-start; gap: 10px; font-weight: 600; }
-  .checkbox input { margin: 3px 0 0; flex: none; width: 20px; height: 20px; accent-color: var(--blue); }
+  .checkbox input { margin: 3px 0 0; flex: none; width: 20px; height: 20px; accent-color: var(--red); }
 
   /* Buttons */
   button {
-    background: linear-gradient(180deg, #e4343f 0%, var(--red) 55%, var(--red-dark) 100%);
+    background: linear-gradient(180deg, var(--red-bright) 0%, var(--red) 55%, var(--red-dark) 100%);
     color: #fff;
     border: none;
     padding: 12px 24px;
@@ -194,7 +197,7 @@
     letter-spacing: 0.02em;
     font-family: inherit;
     cursor: pointer;
-    box-shadow: 0 6px 16px rgba(209, 36, 47, 0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+    box-shadow: 0 6px 16px rgba(179, 39, 45, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
     transition: filter 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
     -webkit-tap-highlight-color: transparent;
   }
@@ -202,25 +205,25 @@
   button:active { transform: translateY(1px); }
   button:focus-visible { outline: none; box-shadow: var(--focus); }
   #generateBtn {
-    background: linear-gradient(180deg, #e8ff5c 0%, var(--ball) 60%, var(--ball-dark) 100%);
-    color: var(--navy);
-    box-shadow: 0 6px 18px rgba(184, 210, 28, 0.45), inset 0 1px 0 rgba(255,255,255,0.5);
+    background: linear-gradient(180deg, #fbf5ea 0%, var(--cream) 60%, var(--ball-dark) 100%);
+    color: #1a1a1a;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.5);
   }
   button.secondary {
-    background: #fff;
-    color: var(--navy);
-    border: 2px solid var(--navy);
+    background: transparent;
+    color: var(--text);
+    border: 2px solid var(--line-strong);
     box-shadow: none;
   }
-  button.secondary:hover { background: var(--tint-blue); filter: none; }
+  button.secondary:hover { background: var(--surface-2); border-color: var(--muted); filter: none; }
   button.small {
     padding: 7px 16px;
     min-height: 40px;
     font-size: 0.8rem;
   }
   button.danger {
-    background: #fff;
-    color: var(--red);
+    background: transparent;
+    color: #e5676c;
     border: 2px solid var(--red);
     box-shadow: none;
   }
@@ -237,7 +240,7 @@
     display: none;
     font-size: 0.88rem;
     font-weight: 700;
-    box-shadow: 0 8px 20px rgba(209, 36, 47, 0.3);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
   }
   .saved-row {
     display: flex;
@@ -246,10 +249,11 @@
     align-items: center;
     margin-top: 18px;
     padding: 12px;
-    background: var(--tint-blue);
+    background: #18181a;
+    border: 1px solid var(--line);
     border-radius: var(--radius-sm);
   }
-  .saved-row select { flex: 1; min-width: 140px; background: #fff; }
+  .saved-row select { flex: 1; min-width: 140px; background: #151517; }
 
   /* Edit rows */
   .edit-team-row {
@@ -263,7 +267,7 @@
   .edit-team-row .amp, .add-participant-row .amp {
     display: inline-grid; place-items: center;
     width: 28px; height: 28px; border-radius: 50%;
-    background: var(--ball); color: var(--navy); font-weight: 800; font-size: 0.8rem;
+    background: var(--red); color: #fff; font-weight: 800; font-size: 0.8rem;
   }
   .edit-player-row {
     display: flex;
@@ -295,12 +299,12 @@
     font-weight: 700;
     letter-spacing: 0;
   }
-  .remove-team:hover { background: var(--tint-red); color: var(--red); filter: none; }
+  .remove-team:hover { background: var(--tint-red); color: #e5676c; filter: none; }
   #editFloatersWrap { border-top: 2px dashed var(--line) !important; }
 
   /* Mixer roster */
   #resultsSection { display: none; }
-  #resultsSection > .card:first-child { border-top: 6px solid var(--ball); }
+  #resultsSection > .card:first-child { border-top: 6px solid var(--red); }
   .active-teams-panel {
     display: flex;
     flex-wrap: wrap;
@@ -311,9 +315,10 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: var(--navy);
-    color: #fff;
-    padding: 4px 4px 4px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
+    color: var(--text);
+    padding: 3px 3px 3px 14px;
     border-radius: 999px;
     font-size: 0.84rem;
     font-weight: 700;
@@ -335,8 +340,8 @@
   .dropped-teams-label { font-size: 0.74rem; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
   .dropped-team-chip {
     display: inline-block;
-    background: #e6e9f2;
-    color: #8a91a6;
+    background: #1a1a1c;
+    color: #6a6a70;
     text-decoration: line-through;
     padding: 4px 12px;
     border-radius: 999px;
@@ -359,7 +364,7 @@
     justify-content: space-between;
     gap: 10px;
     padding: 16px 22px;
-    background: linear-gradient(100deg, var(--red-dark) 0%, var(--red) 60%, #ef5a3c 120%);
+    background: linear-gradient(100deg, var(--red-dark) 0%, var(--red) 70%, var(--red-bright) 120%);
     color: #fff;
   }
   .round-header h2 {
@@ -374,18 +379,18 @@
     font-weight: 800;
     padding: 5px 12px;
     border-radius: 999px;
-    background: var(--ball);
-    color: var(--navy);
+    background: var(--cream);
+    color: #1a1a1a;
     white-space: nowrap;
   }
   .round.complete .round-header {
-    background: linear-gradient(100deg, var(--green-dark) 0%, var(--green) 100%);
+    background: linear-gradient(100deg, #2e2e31 0%, #48484d 100%);
   }
-  .round.complete .lock-badge { background: #fff; color: var(--green-dark); }
-  .round.locked { box-shadow: none; background: #e6e9f2; }
+  .round.complete .lock-badge { background: #e3f3e8; color: var(--green-dark); }
+  .round.locked { box-shadow: none; background: #18181a; }
   .round.locked .round-header {
-    background: linear-gradient(100deg, #26365f 0%, #3a4a75 100%);
-    color: rgba(255,255,255,0.7);
+    background: #222225;
+    color: var(--muted);
   }
   .round.locked .lock-badge {
     background: rgba(255,255,255,0.12);
@@ -411,13 +416,13 @@
   }
   th { color: var(--muted); font-weight: 800; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 0; }
   th:nth-child(2) { color: var(--red); }
-  th:nth-child(3) { color: var(--blue); }
-  td { background: #f4f6fb; font-weight: 600; }
+  th:nth-child(3) { color: var(--cream); }
+  td { background: var(--surface-2); font-weight: 600; }
   td:first-child {
     width: 1%;
     white-space: nowrap;
-    background: var(--navy);
-    color: var(--ball);
+    background: #121213;
+    color: var(--cream);
     font-weight: 800;
     font-size: 0.82rem;
     text-transform: uppercase;
@@ -425,13 +430,13 @@
     border-radius: 10px 0 0 10px;
   }
   td:nth-child(2) { box-shadow: inset 4px 0 0 var(--red); }
-  td:nth-child(3) { box-shadow: inset 4px 0 0 var(--blue); border-radius: 0 10px 10px 0; }
+  td:nth-child(3) { box-shadow: inset 4px 0 0 var(--cream); border-radius: 0 10px 10px 0; }
   .heat-label {
     display: inline-block;
     font-size: 0.72rem;
     font-weight: 800;
-    color: var(--navy);
-    background: var(--ball);
+    color: #1a1a1a;
+    background: var(--cream);
     padding: 3px 10px;
     border-radius: 999px;
     text-transform: uppercase;
@@ -440,12 +445,13 @@
   }
   .heat-label:first-child { margin-top: 4px; }
   .bye {
-    color: #7a5a00;
+    color: var(--cream);
     font-size: 0.85rem;
     font-weight: 600;
     margin: 8px 0 0;
     padding: 10px 14px;
-    background: #fff6d6;
+    background: #1a1a1c;
+    border: 1px dashed var(--line-strong);
     border-radius: var(--radius-sm);
   }
   .round-complete {
@@ -454,7 +460,7 @@
     gap: 12px;
     margin: 14px 0 0;
     padding: 14px 16px;
-    background: #fff;
+    background: #18181a;
     border: 2px dashed var(--line-strong);
     border-radius: var(--radius-sm);
     font-weight: 700;
@@ -463,7 +469,7 @@
     transition: background 0.15s ease, border-color 0.15s ease;
   }
   .round-complete:hover { border-color: var(--green); }
-  .round-complete:has(input:checked) { background: #e5f6ec; border: 2px solid var(--green); color: var(--green-dark); }
+  .round-complete:has(input:checked) { background: #17261c; border: 2px solid var(--green); color: #9fdcb3; }
   .round-complete input {
     flex: none;
     width: 24px;
@@ -483,9 +489,9 @@
     body { padding-top: max(14px, env(safe-area-inset-top)); background-size: 100% 380px, 100% 380px, 100% 380px, 100% 380px, 100% 100%; background-image:
       linear-gradient(90deg, transparent calc(50% - 1px), rgba(255,255,255,0.06) calc(50% - 1px), rgba(255,255,255,0.06) calc(50% + 1px), transparent calc(50% + 1px)),
       linear-gradient(180deg, transparent 120px, rgba(255,255,255,0.10) 120px, rgba(255,255,255,0.10) 122px, transparent 122px),
-      radial-gradient(500px 300px at 100% -40px, rgba(37, 80, 217, 0.55), transparent 70%),
-      radial-gradient(400px 260px at 0% 40px, rgba(209, 36, 47, 0.35), transparent 70%),
-      linear-gradient(180deg, var(--navy) 0, var(--navy-2) 380px, var(--page) 380px); }
+      radial-gradient(500px 300px at 100% -40px, rgba(179, 39, 45, 0.45), transparent 70%),
+      radial-gradient(400px 260px at 0% 40px, rgba(179, 39, 45, 0.18), transparent 70%),
+      linear-gradient(180deg, #0b0b0c 0, #1a1a1c 380px, var(--page) 380px); }
     .card { padding: 20px 16px; border-radius: 18px; }
     .card h3 { margin: -20px -16px 0; padding: 14px 16px; }
     .card.logo-wrap { width: min(100%, 180px); }
@@ -508,13 +514,15 @@
     .card.input-card, .card#buildTeamsCard, .card#settingsCard, .actions, .sub-card,
     .lock-badge, .round-complete, .active-teams-panel button, .dropped-teams { display: none !important; }
     .round-body { display: block !important; }
-    .round .round-header, .round.locked .round-header { background: var(--navy) !important; color: #fff !important; }
+    .round .round-header, .round.locked .round-header { background: #b3272d !important; color: #fff !important; }
+    .card, .round, .round-body { background: #fff !important; }
+    .card, .round, td { color: #262626 !important; }
     body { padding: 0; background: #fff !important; }
     .logo-img { filter: none; }
-    .tagline { color: var(--navy); }
+    .tagline { color: #b3272d; }
     .round { break-inside: avoid; box-shadow: none; }
     td { background: #fff !important; }
-    td:first-child { color: var(--navy) !important; }
+    td:first-child { color: #b3272d !important; }
   }
 </style>
 </head>
