@@ -1071,6 +1071,123 @@
     refreshPlayerListDropdown();
   });
 
+  // ---------- play history: who has partnered with / played against whom ----------
+  // Rebuilt from the rounds themselves (never stored separately), so it always matches
+  // the schedule. Keyed by lower-cased name rather than id, so someone who drops and is
+  // later re-added under the same name keeps their history. In teams mode a fixed team
+  // counts as one unit (its full "A & B" name).
+  const PARTNER_REPEAT_COST = 4; // repeating a partner is worse than repeating an opponent
+  const OPPONENT_REPEAT_COST = 1;
+  const GROUPING_TRIES = 300;
+
+  function pairKey(x, y) {
+    x = x.toLowerCase(); y = y.toLowerCase();
+    return x < y ? x + '|' + y : y + '|' + x;
+  }
+  function createHistory() { return { partners: {}, opponents: {} }; }
+  function sidePlayers(side) { return side.players || [side.name]; }
+  function partnerCount(h, x, y) { return h.partners[pairKey(x, y)] || 0; }
+  function opponentCount(h, x, y) { return h.opponents[pairKey(x, y)] || 0; }
+  function recordMatch(h, match) {
+    const a = sidePlayers(match.a), b = sidePlayers(match.b);
+    [a, b].forEach(side => {
+      if (side.length === 2) { const k = pairKey(side[0], side[1]); h.partners[k] = (h.partners[k] || 0) + 1; }
+    });
+    a.forEach(x => b.forEach(y => { const k = pairKey(x, y); h.opponents[k] = (h.opponents[k] || 0) + 1; }));
+  }
+  function computeHistory(rounds) {
+    const h = createHistory();
+    rounds.forEach(round => round.heats.forEach(heat => heat.forEach(m => recordMatch(h, m))));
+    return h;
+  }
+  function matchCost(h, a, b) {
+    let cost = 0;
+    if (a.length === 2) cost += PARTNER_REPEAT_COST * partnerCount(h, a[0], a[1]);
+    if (b.length === 2) cost += PARTNER_REPEAT_COST * partnerCount(h, b[0], b[1]);
+    a.forEach(x => b.forEach(y => { cost += OPPONENT_REPEAT_COST * opponentCount(h, x, y); }));
+    return cost;
+  }
+
+  // Splits `players` (a multiple of 4) into doubles matches with as few repeat partners
+  // and opponents as possible: many random groupings of four are tried, each four is
+  // split into the best of its 3 possible team pairings, and the cheapest overall wins.
+  function bestDoublesGrouping(players, h) {
+    const splits = [[[0, 1], [2, 3]], [[0, 2], [1, 3]], [[0, 3], [1, 2]]];
+    let best = null, bestCost = Infinity;
+    for (let t = 0; t < GROUPING_TRIES && bestCost > 0; t++) {
+      const order = shuffleArray(players);
+      const groups = [];
+      let total = 0;
+      for (let g = 0; g + 4 <= order.length; g += 4) {
+        const four = order.slice(g, g + 4).map(p => p.name);
+        let pick = null, pickCost = Infinity;
+        shuffleArray(splits).forEach(([x, y]) => {
+          const a = [four[x[0]], four[x[1]]], b = [four[y[0]], four[y[1]]];
+          const c = matchCost(h, a, b);
+          if (c < pickCost) { pickCost = c; pick = [a, b]; }
+        });
+        groups.push(pick);
+        total += pickCost;
+      }
+      if (total < bestCost) { bestCost = total; best = groups; }
+    }
+    return best || [];
+  }
+
+  // Pairs up whole units (fixed teams, or floater pairs) to play each other, preferring
+  // opponents they've met the fewest times. `units` are [{name, players}]; even length.
+  function bestOpponentPairing(units, h) {
+    let best = null, bestCost = Infinity;
+    for (let t = 0; t < GROUPING_TRIES && bestCost > 0; t++) {
+      const remaining = shuffleArray(units);
+      const pairs = [];
+      let total = 0;
+      while (remaining.length >= 2) {
+        const first = remaining.shift();
+        let bi = 0, bc = Infinity;
+        remaining.forEach((u, i) => {
+          const c = matchCost(h, first.players, u.players);
+          if (c < bc) { bc = c; bi = i; }
+        });
+        pairs.push([first, remaining.splice(bi, 1)[0]]);
+        total += bc;
+      }
+      if (total < bestCost) { bestCost = total; best = pairs; }
+    }
+    return best || [];
+  }
+
+  // Teams-mode schedule used after a mid-event roster change. A fresh circle-method
+  // round robin would restart from scratch and repeat matchups already played, so
+  // instead each round pairs teams against the opponents they've faced least so far
+  // (including the frozen rounds' history). Byes still rotate fewest-sat-out first.
+  function buildTeamRoundsWithHistory(teamObjs, courts, numRounds, startRoundNumber, initialSitOutCounts, history) {
+    const counts = {};
+    teamObjs.forEach(t => { counts[t.id] = (initialSitOutCounts && initialSitOutCounts[t.id]) || 0; });
+    const rounds = [];
+    for (let i = 0; i < numRounds; i++) {
+      let byes = [];
+      let playing = teamObjs;
+      if (teamObjs.length % 2 === 1) {
+        const sitter = shuffleArray(teamObjs).sort((a, b) => counts[a.id] - counts[b.id])[0];
+        counts[sitter.id] += 1;
+        byes = [sitter];
+        playing = teamObjs.filter(t => t.id !== sitter.id);
+      }
+      const units = playing.map(t => ({ team: t, name: t.name, players: [t.name] }));
+      const matches = shuffleArray(bestOpponentPairing(units, history).map(([x, y]) => ({
+        a: { id: x.team.id, name: x.team.name, players: [x.team.name] },
+        b: { id: y.team.id, name: y.team.name, players: [y.team.name] }
+      })));
+      matches.forEach(m => recordMatch(history, m));
+      const heats = [];
+      for (let k = 0; k < matches.length; k += courts) heats.push(matches.slice(k, k + courts));
+      if (heats.length === 0) heats.push([]);
+      rounds.push({ roundNumber: startRoundNumber + i, heats, byes: byes.map(t => ({ id: t.id, name: t.name })) });
+    }
+    return rounds;
+  }
+
   // ---------- fixed-partner round-robin (teams mode) ----------
   function roundRobinIndexRounds(n) {
     const teams = [...Array(n).keys()];
@@ -1172,7 +1289,8 @@
   // If that leaves one pair with no other floater-pair to play, they get a match
   // against whichever fixed team has faced the floater pool the least so far, added
   // as an extra heat so it never overlaps a team's own regularly-scheduled match.
-  function mergeFloatingPoolIntoRounds(rounds, floaters, fixedTeams, initialSitOutCounts, initialBorrowCounts) {
+  function mergeFloatingPoolIntoRounds(rounds, floaters, fixedTeams, initialSitOutCounts, initialBorrowCounts, history) {
+    const h = history || createHistory();
     const sitOutCounts = {};
     floaters.forEach(f => { sitOutCounts[f.id] = (initialSitOutCounts && initialSitOutCounts[f.id]) || 0; });
     const borrowCounts = {};
@@ -1183,33 +1301,40 @@
       const sittingOut = byFewestSitOuts.slice(0, 1);
       sittingOut.forEach(f => { sitOutCounts[f.id] += 1; });
       const sittingIds = new Set(sittingOut.map(f => f.id));
-      const playing = shuffleArray(floaters.filter(f => !sittingIds.has(f.id)));
+      const playing = floaters.filter(f => !sittingIds.has(f.id));
 
-      const pairs = [];
-      for (let i = 0; i < playing.length; i += 2) pairs.push([playing[i], playing[i + 1]]);
-
-      const extraMatches = [];
-      let leftoverPair = null;
-      for (let i = 0; i < pairs.length; i += 2) {
-        if (i + 1 < pairs.length) {
-          extraMatches.push({
-            a: { name: `${pairs[i][0].name} & ${pairs[i][1].name}` },
-            b: { name: `${pairs[i + 1][0].name} & ${pairs[i + 1][1].name}` }
-          });
-        } else {
-          leftoverPair = pairs[i];
-        }
+      // Floaters get new partners each round, preferring people they haven't
+      // partnered (or faced) yet. Groups of four are split best-first; a leftover
+      // pair (when the count isn't a multiple of 4) is whoever's left over.
+      const fullFours = Math.floor(playing.length / 4) * 4;
+      let best = null, bestCost = Infinity;
+      const leftoverTries = playing.length % 4 === 0 ? 1 : 25; // vary who forms the leftover pair
+      for (let t = 0; t < leftoverTries && bestCost > 0; t++) {
+        const order = shuffleArray(playing);
+        const groups = bestDoublesGrouping(order.slice(0, fullFours), h);
+        const rest = order.slice(fullFours).map(f => f.name);
+        let cost = groups.reduce((sum, [a, b]) => sum + matchCost(h, a, b), 0);
+        if (rest.length === 2) cost += PARTNER_REPEAT_COST * partnerCount(h, rest[0], rest[1]);
+        if (cost < bestCost) { bestCost = cost; best = { groups, rest }; }
       }
-      if (leftoverPair) {
-        const opponent = fixedTeams.slice().sort((a, b) => borrowCounts[a.id] - borrowCounts[b.id])[0];
+
+      const extraMatches = best.groups.map(([a, b]) => ({
+        a: { name: `${a[0]} & ${a[1]}`, players: a },
+        b: { name: `${b[0]} & ${b[1]}`, players: b }
+      }));
+      if (best.rest.length === 2) {
+        const leftover = best.rest;
+        const opponent = fixedTeams.slice().sort((a, b) =>
+          (borrowCounts[a.id] - borrowCounts[b.id]) ||
+          (matchCost(h, leftover, [a.name]) - matchCost(h, leftover, [b.name])))[0];
         borrowCounts[opponent.id] += 1;
         extraMatches.push({
-          a: { name: `${leftoverPair[0].name} & ${leftoverPair[1].name}` },
-          b: { name: opponent.name }
+          a: { name: `${leftover[0]} & ${leftover[1]}`, players: leftover },
+          b: { name: opponent.name, players: [opponent.name] }
         });
       }
 
-      extraMatches.forEach(m => round.heats.push([m]));
+      extraMatches.forEach(m => { recordMatch(h, m); round.heats.push([m]); });
       round.byes = round.byes.concat(sittingOut.map(f => ({ id: f.id, name: f.name })));
     });
   }
@@ -1258,7 +1383,8 @@
   // scratch, but WHO sits out is decided separately: whoever has sat out the fewest
   // times so far (starting from initialSitOutCounts) gets priority to sit, so sit-outs
   // rotate through everyone once before anyone sits a second time.
-  function buildRandomRounds(playerObjs, courts, numRounds, startRoundNumber, initialSitOutCounts) {
+  function buildRandomRounds(playerObjs, courts, numRounds, startRoundNumber, initialSitOutCounts, history) {
+    const h = history || createHistory();
     const counts = {};
     playerObjs.forEach(p => { counts[p.id] = (initialSitOutCounts && initialSitOutCounts[p.id]) || 0; });
 
@@ -1277,16 +1403,14 @@
         sittingOut.forEach(p => { counts[p.id] += 1; });
       }
 
-      const playing = shuffleArray(playingPool);
-      const numGroups = Math.floor(playing.length / 4);
-      const matches = [];
-      for (let g = 0; g < numGroups; g++) {
-        const four = playing.slice(g * 4, g * 4 + 4);
-        matches.push({
-          a: { name: `${four[0].name} & ${four[1].name}` },
-          b: { name: `${four[2].name} & ${four[3].name}` }
-        });
-      }
+      // Partners and opponents are picked to avoid anyone already played with or
+      // against (per `h`, which carries the history of earlier rounds — including
+      // rounds played before a mid-event roster change), then randomized among ties.
+      const matches = shuffleArray(bestDoublesGrouping(playingPool, h).map(([a, b]) => ({
+        a: { name: `${a[0]} & ${a[1]}`, players: a },
+        b: { name: `${b[0]} & ${b[1]}`, players: b }
+      })));
+      matches.forEach(m => recordMatch(h, m));
       const heats = [];
       for (let k = 0; k < matches.length; k += courts) heats.push(matches.slice(k, k + courts));
       if (heats.length === 0) heats.push([]);
@@ -1411,13 +1535,16 @@
     const frozenCount = Math.min(completedCount + 1, displayRounds.length);
     const frozenRounds = displayRounds.slice(0, frozenCount);
     const sitOutCounts = computeSitOutCounts(frozenRounds);
+    // Who has already partnered / faced whom stays remembered across the roster
+    // change, so the regenerated rounds keep avoiding repeats.
+    const history = computeHistory(frozenRounds);
 
     let newFutureRounds;
     if (mixerMode === 'individual') {
       const activePlayerObjs = eventPlayers.filter(p => p.active).map(p => ({ id: p.id, name: p.name }));
       const futureCount = Math.max((desiredRoundsTotal || 0) - frozenCount, 0);
       newFutureRounds = activePlayerObjs.length >= 4
-        ? buildRandomRounds(activePlayerObjs, courtsValue, futureCount, frozenCount + 1, sitOutCounts)
+        ? buildRandomRounds(activePlayerObjs, courtsValue, futureCount, frozenCount + 1, sitOutCounts, history)
         : [];
     } else {
       const activeTeamObjs = eventTeams.filter(t => t.active).map(t => ({ id: t.id, name: t.name }));
@@ -1443,15 +1570,15 @@
         }
       }
 
-      const orderedTeams = reorderTeamsForFairness(workingTeams, sitOutCounts);
-      let futureCount = null;
+      // "Full round robin" = one full cycle for the new roster (n-1 rounds, or n with a bye).
+      let futureCount = workingTeams.length % 2 === 0 ? workingTeams.length - 1 : workingTeams.length;
       if (roundsSettingValue === 'custom') futureCount = Math.max((desiredRoundsTotal || 0) - frozenCount, 0);
       newFutureRounds = workingTeams.length >= 2
-        ? buildDisplayRounds(orderedTeams, courtsValue, futureCount, frozenCount + 1)
+        ? buildTeamRoundsWithHistory(workingTeams, courtsValue, futureCount, frozenCount + 1, sitOutCounts, history)
         : createEmptyRounds(Math.max((desiredRoundsTotal || 0) - frozenCount, 0), frozenCount + 1);
 
       if (workingFloaterPool.length > 0) {
-        mergeFloatingPoolIntoRounds(newFutureRounds, workingFloaterPool, workingTeams, sitOutCounts, {});
+        mergeFloatingPoolIntoRounds(newFutureRounds, workingFloaterPool, workingTeams, sitOutCounts, {}, history);
       }
     }
 
