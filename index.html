@@ -4,224 +4,358 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Pickleball Team Mixer</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Crect x='42' y='38' width='10' height='20' rx='4' fill='%233a3a3a'/%3E%3Crect x='18' y='4' width='38' height='46' rx='16' fill='%23b3272d' stroke='%238c1f24' stroke-width='2'/%3E%3Ccircle cx='78' cy='40' r='14' fill='%23e8e8e8' stroke='%239a9a9a' stroke-width='1.5'/%3E%3Ccircle cx='72' cy='34' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='82' cy='33' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='86' cy='41' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='78' cy='47' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='70' cy='44' r='1.6' fill='%239a9a9a'/%3E%3Ccircle cx='78' cy='40' r='1.6' fill='%239a9a9a'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="theme-color" content="#b3272d">
+<meta name="theme-color" content="#121213">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MXD-PB Mixer">
 <style>
+  /* Look: dark mode in the original MXD-PB colors: brand red on charcoal, with the logo's cream as the highlight. */
   :root {
-    --ocean: #b3272d;
-    --ocean-dark: #7d1b1f;
+    --navy: #1e1e20;
+    --navy-2: #141415;
+    --blue: #3a1416;
+    --red: #b3272d;
+    --red-dark: #8c1f24;
+    --red-bright: #d23a40;
+    --ball: #efe6d4;
+    --ball-dark: #d9ccb2;
+    --cream: #efe6d4;
+    --green: #4caf6e;
+    --green-dark: #2f7d4a;
+    --page: #121213;
+    --card: #1d1d1f;
+    --surface-2: #26262a;
+    --line: #333338;
+    --line-strong: #4a4a50;
+    --text: #ececec;
+    --muted: #9a9a9a;
+    --tint-red: #3a1a1c;
+    --tint-blue: #26262a;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.35);
+    --focus: 0 0 0 3px rgba(210, 58, 64, 0.45);
+    /* legacy names still referenced inline in the markup */
+    --border: var(--line);
+    --ocean: var(--red);
+    --ocean-dark: var(--text);
     --ocean-light: #e3a6a8;
-    --coral: #b3272d;
-    --coral-dark: #8c1f24;
-    --sun: #9a9a9a;
-    --seafoam: #ececec;
-    --seafoam-dark: #b5b5b5;
-    --sand: #ececec;
-    --sand-light: #f7f7f7;
-    --card: #ffffff;
-    --border: #dcdcdc;
-    --text: #262626;
-    --muted: #7a7a7a;
+    --coral: var(--red);
+    --coral-dark: var(--red-dark);
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
-  html { font-size: 125%; }
+  html { font-size: 125%; -webkit-text-size-adjust: 100%; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: linear-gradient(180deg, #f7f7f7 0%, var(--sand-light) 45%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.45;
     color: var(--text);
-    padding: 24px 16px 80px;
+    background-color: var(--page);
+    background-image:
+      linear-gradient(90deg, transparent calc(50% - 1px), rgba(255,255,255,0.06) calc(50% - 1px), rgba(255,255,255,0.06) calc(50% + 1px), transparent calc(50% + 1px)),
+      linear-gradient(180deg, transparent 150px, rgba(255,255,255,0.10) 150px, rgba(255,255,255,0.10) 152px, transparent 152px),
+      radial-gradient(900px 420px at 85% -60px, rgba(179, 39, 45, 0.45), transparent 70%),
+      radial-gradient(700px 380px at 0% 40px, rgba(179, 39, 45, 0.18), transparent 70%),
+      linear-gradient(180deg, #0b0b0c 0, #1a1a1c 430px, var(--page) 430px);
+    background-repeat: no-repeat;
+    background-size: 100% 430px, 100% 430px, 100% 430px, 100% 430px, 100% 100%;
+    padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 80px max(16px, env(safe-area-inset-left));
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 900px; margin: 0 auto; }
-  .logo-wrap { text-align: center; margin-bottom: 16px; padding: 12px; }
-  .logo-img { max-width: 520px; width: 100%; height: auto; border-radius: 10px; }
-  .sub-card { text-align: center; }
-  .sub { color: var(--muted); margin: 0; font-size: 0.95rem; }
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  /* Header */
+  .card.logo-wrap {
+    width: min(100%, 230px);
+    margin: 0 auto;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    text-align: center;
+  }
+  .logo-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.45));
+  }
+  .tagline {
+    margin: 0 0 6px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cream);
+  }
+  .card.sub-card {
+    text-align: center;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 14px 8px 4px;
+    margin-bottom: 26px;
+  }
+  .sub { color: rgba(255,255,255,0.85); margin: 0 auto; font-size: 0.9rem; max-width: 32em; font-weight: 500; }
+
+  /* Cards: each step gets a navy title band */
   .card {
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
+    border: none;
+    border-radius: var(--radius);
+    padding: 22px 24px 24px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow);
+    overflow: hidden;
   }
   .card h3 {
-    margin: 0 0 4px;
-    color: var(--ocean-dark);
+    margin: -22px -24px 0;
+    padding: 16px 24px;
+    background: linear-gradient(100deg, #2a2a2d 0%, #202022 60%, #3a1416 120%);
+    color: #fff;
     font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    border-bottom: 4px solid var(--red);
   }
-  .card-hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 14px; }
-  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
-  .hint { color: var(--muted); font-size: 0.82rem; margin: -2px 0 8px; }
+  .card h3 + .card-hint, .card h3 + .field, .card h3 + .row { margin-top: 16px; }
+  .card-hint { color: var(--muted); font-size: 0.82rem; margin: 0 0 18px; }
+  label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 0.88rem; }
+  .hint { color: var(--muted); font-size: 0.8rem; margin: -2px 0 10px; }
+
+  /* Inputs */
   textarea, input[type=number], input[type=text], select {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    min-height: 46px;
+    padding: 10px 14px;
+    border: 2px solid var(--line);
+    border-radius: var(--radius-sm);
     font-size: 0.95rem;
     font-family: inherit;
-    background: #fff;
+    background: #151517;
     color: var(--text);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
+  textarea::placeholder, input::placeholder { color: #6a6a70; }
   textarea:focus, input:focus, select:focus {
     outline: none;
-    border-color: var(--ocean-light);
-    box-shadow: 0 0 0 3px rgba(179, 39, 45, 0.25);
+    background: #18181a;
+    border-color: var(--red-bright);
+    box-shadow: var(--focus);
   }
-  textarea { min-height: 140px; resize: vertical; }
+  textarea { min-height: 160px; resize: vertical; line-height: 1.5; }
   .row { display: flex; gap: 16px; flex-wrap: wrap; }
   .row > div { flex: 1; min-width: 160px; }
-  .field { margin-bottom: 16px; }
-  .radio-group { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 4px; }
-  .radio-group label { display: flex; align-items: center; gap: 6px; font-weight: 500; margin: 0; cursor: pointer; }
-  .radio-group input { margin: 0; }
-  .checkbox { display: flex; align-items: center; gap: 8px; font-weight: 500; }
-  .checkbox input { margin: 0; }
+  .field { margin-bottom: 18px; }
+
+  /* Mode picker tiles */
+  .radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+  .radio-group label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 0.86rem;
+    margin: 0;
+    cursor: pointer;
+    padding: 14px;
+    border: 2px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: #151517;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .radio-group label:hover { border-color: var(--line-strong); }
+  .radio-group label:has(input:checked) {
+    border-color: var(--red);
+    background: var(--red);
+    color: #fff;
+    box-shadow: inset 0 -4px 0 var(--cream);
+  }
+  .radio-group input { margin: 2px 0 0; flex: none; width: 20px; height: 20px; accent-color: var(--cream); }
+  .checkbox { display: flex; align-items: flex-start; gap: 10px; font-weight: 600; }
+  .checkbox input { margin: 3px 0 0; flex: none; width: 20px; height: 20px; accent-color: var(--red); }
+
+  /* Buttons */
   button {
-    background: var(--coral);
+    background: linear-gradient(180deg, var(--red-bright) 0%, var(--red) 55%, var(--red-dark) 100%);
     color: #fff;
     border: none;
-    padding: 12px 22px;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
+    padding: 12px 24px;
+    min-height: 46px;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    font-family: inherit;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(179, 39, 45, 0.35);
+    box-shadow: 0 6px 16px rgba(179, 39, 45, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: filter 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+    -webkit-tap-highlight-color: transparent;
   }
-  button:hover { background: var(--coral-dark); }
+  button:hover { filter: brightness(1.06); }
+  button:active { transform: translateY(1px); }
+  button:focus-visible { outline: none; box-shadow: var(--focus); }
+  #generateBtn {
+    background: linear-gradient(180deg, #fbf5ea 0%, var(--cream) 60%, var(--ball-dark) 100%);
+    color: #1a1a1a;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
   button.secondary {
-    background: #fff;
-    color: var(--ocean-dark);
-    border: 1px solid var(--ocean);
+    background: transparent;
+    color: var(--text);
+    border: 2px solid var(--line-strong);
     box-shadow: none;
   }
-  button.secondary:hover { background: #eaf7f8; }
+  button.secondary:hover { background: var(--surface-2); border-color: var(--muted); filter: none; }
   button.small {
-    padding: 7px 14px;
-    font-size: 0.85rem;
-    box-shadow: none;
+    padding: 7px 16px;
+    min-height: 40px;
+    font-size: 0.8rem;
   }
   button.danger {
-    background: #fff;
-    color: var(--coral-dark);
-    border: 1px solid var(--coral);
+    background: transparent;
+    color: #e5676c;
+    border: 2px solid var(--red);
     box-shadow: none;
   }
-  button.danger:hover { background: #fff1ee; }
+  button.danger:hover { background: var(--tint-red); filter: none; }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
-  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+
   #error {
-    color: #a12626;
-    background: #fdecec;
-    border: 1px solid #f3c6c6;
-    padding: 10px 14px;
-    border-radius: 8px;
+    color: #fff;
+    background: var(--red);
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
     margin-bottom: 16px;
     display: none;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
   }
   .saved-row {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
     align-items: center;
-    margin-top: 10px;
-    padding-top: 12px;
-    border-top: 1px dashed var(--border);
+    margin-top: 18px;
+    padding: 12px;
+    background: #18181a;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
   }
-  .saved-row select { flex: 1; min-width: 140px; }
+  .saved-row select { flex: 1; min-width: 140px; background: #151517; }
+
+  /* Edit rows */
   .edit-team-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     flex-wrap: wrap;
   }
   .edit-team-row input[type=text] { flex: 1; min-width: 120px; }
-  .edit-team-row .amp { color: var(--muted); font-weight: 700; }
+  .edit-team-row .amp, .add-participant-row .amp {
+    display: inline-grid; place-items: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--red); color: #fff; font-weight: 800; font-size: 0.8rem;
+  }
   .edit-player-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
-  .edit-player-row input[type=text] { flex: 1; }
+  .edit-player-row input[type=text] { flex: 1; min-width: 0; }
   .add-participant-row {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px dashed var(--border);
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 2px dashed var(--line);
   }
   .add-participant-row input[type=text] { flex: 1; min-width: 140px; }
-  .add-participant-row .amp { color: var(--muted); font-weight: 700; }
   .remove-team {
-    background: #fff;
-    color: var(--coral-dark);
-    border: 1px solid var(--coral);
+    flex: none;
+    background: transparent;
+    color: var(--muted);
+    border: none;
     box-shadow: none;
     padding: 8px 12px;
-    font-size: 0.85rem;
+    min-height: 44px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0;
   }
-  .remove-team:hover { background: #fff1ee; }
+  .remove-team:hover { background: var(--tint-red); color: #e5676c; filter: none; }
+  #editFloatersWrap { border-top: 2px dashed var(--line) !important; }
+
+  /* Mixer roster */
   #resultsSection { display: none; }
+  #resultsSection > .card:first-child { border-top: 6px solid var(--red); }
   .active-teams-panel {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-top: 10px;
+    margin-top: 12px;
   }
   .active-team-chip {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: var(--seafoam);
-    border: 1px solid var(--seafoam-dark);
-    color: var(--ocean-dark);
-    padding: 4px 6px 4px 12px;
+    gap: 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
+    color: var(--text);
+    padding: 3px 3px 3px 14px;
     border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.84rem;
+    font-weight: 700;
   }
   .active-team-chip button {
-    background: rgba(255,255,255,0.6);
-    color: var(--coral-dark);
+    background: rgba(255,255,255,0.14);
+    color: #fff;
     border: none;
     box-shadow: none;
-    padding: 2px 8px;
-    font-size: 0.78rem;
+    padding: 3px 10px;
+    min-height: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
     border-radius: 999px;
     line-height: 1.6;
   }
-  .active-team-chip button:hover { background: #fff; }
-  .dropped-teams { margin-top: 12px; }
-  .dropped-teams-label { font-size: 0.8rem; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .active-team-chip button:hover { background: var(--red); filter: none; }
+  .dropped-teams { margin-top: 14px; }
+  .dropped-teams-label { font-size: 0.74rem; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
   .dropped-team-chip {
     display: inline-block;
-    background: #eee;
-    color: #8a8a8a;
+    background: #1a1a1c;
+    color: #6a6a70;
     text-decoration: line-through;
-    padding: 4px 10px;
+    padding: 4px 12px;
     border-radius: 999px;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     margin: 0 6px 6px 0;
   }
+
+  /* Rounds */
   .round {
     margin-bottom: 18px;
     background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: var(--radius);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow);
     transition: opacity 0.25s ease;
   }
   .round-header {
@@ -229,102 +363,176 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 14px 18px;
-    background: linear-gradient(90deg, var(--ocean) 0%, var(--ocean-light) 140%);
+    padding: 16px 22px;
+    background: linear-gradient(100deg, var(--red-dark) 0%, var(--red) 70%, var(--red-bright) 120%);
     color: #fff;
   }
   .round-header h2 {
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     margin: 0;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
   }
   .lock-badge {
-    font-size: 0.78rem;
-    font-weight: 700;
-    padding: 4px 10px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 5px 12px;
     border-radius: 999px;
-    background: rgba(255,255,255,0.25);
+    background: var(--cream);
+    color: #1a1a1a;
     white-space: nowrap;
   }
   .round.complete .round-header {
-    background: linear-gradient(90deg, #3a3a3a 0%, #6b6b6b 140%);
+    background: linear-gradient(100deg, #2e2e31 0%, #48484d 100%);
   }
+  .round.complete .lock-badge { background: #e3f3e8; color: var(--green-dark); }
+  .round.locked { box-shadow: none; background: #18181a; }
   .round.locked .round-header {
-    background: #cdd7d6;
-    color: #55625f;
+    background: #222225;
+    color: var(--muted);
   }
   .round.locked .lock-badge {
-    background: rgba(0,0,0,0.08);
-    color: #55625f;
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.8);
   }
-  .round-body { padding: 16px 18px 18px; }
+  .round-body { padding: 14px 22px 22px; }
   .round-locked-msg {
-    padding: 18px;
+    padding: 14px 22px 16px;
     color: var(--muted);
-    font-style: italic;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
   }
   table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0 8px;
     font-size: 0.95rem;
   }
   th, td {
     text-align: left;
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
+    padding: 10px 12px;
+    vertical-align: middle;
   }
-  th { color: var(--muted); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; }
-  .heat-label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--ocean-dark);
+  th { color: var(--muted); font-weight: 800; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 0; }
+  th:nth-child(2) { color: var(--red); }
+  th:nth-child(3) { color: var(--cream); }
+  td { background: var(--surface-2); font-weight: 600; }
+  td:first-child {
+    width: 1%;
+    white-space: nowrap;
+    background: #121213;
+    color: var(--cream);
+    font-weight: 800;
+    font-size: 0.82rem;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin: 14px 0 6px;
+    letter-spacing: 0.04em;
+    border-radius: 10px 0 0 10px;
   }
-  .heat-label:first-child { margin-top: 0; }
+  td:nth-child(2) { box-shadow: inset 4px 0 0 var(--red); }
+  td:nth-child(3) { box-shadow: inset 4px 0 0 var(--cream); border-radius: 0 10px 10px 0; }
+  .heat-label {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    background: var(--cream);
+    padding: 3px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 16px 0 0;
+  }
+  .heat-label:first-child { margin-top: 4px; }
   .bye {
-    color: var(--muted);
-    font-style: italic;
-    font-size: 0.88rem;
-    margin-top: 10px;
+    color: var(--cream);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 8px 0 0;
+    padding: 10px 14px;
+    background: #1a1a1c;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-sm);
   }
   .round-complete {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-top: 16px;
-    padding: 12px 14px;
-    background: var(--sand);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    font-weight: 600;
+    gap: 12px;
+    margin: 14px 0 0;
+    padding: 14px 16px;
+    background: #18181a;
+    border: 2px dashed var(--line-strong);
+    border-radius: var(--radius-sm);
+    font-weight: 700;
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    transition: background 0.15s ease, border-color 0.15s ease;
   }
+  .round-complete:hover { border-color: var(--green); }
+  .round-complete:has(input:checked) { background: #17261c; border: 2px solid var(--green); color: #9fdcb3; }
   .round-complete input {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--ocean-dark);
+    flex: none;
+    width: 24px;
+    height: 24px;
+    margin: 0;
+    accent-color: var(--green);
     cursor: pointer;
   }
+  #resultsSection > .actions { margin-top: 8px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+
+  /* Phones */
+  @media (max-width: 560px) {
+    body { padding-top: max(14px, env(safe-area-inset-top)); background-size: 100% 380px, 100% 380px, 100% 380px, 100% 380px, 100% 100%; background-image:
+      linear-gradient(90deg, transparent calc(50% - 1px), rgba(255,255,255,0.06) calc(50% - 1px), rgba(255,255,255,0.06) calc(50% + 1px), transparent calc(50% + 1px)),
+      linear-gradient(180deg, transparent 120px, rgba(255,255,255,0.10) 120px, rgba(255,255,255,0.10) 122px, transparent 122px),
+      radial-gradient(500px 300px at 100% -40px, rgba(179, 39, 45, 0.45), transparent 70%),
+      radial-gradient(400px 260px at 0% 40px, rgba(179, 39, 45, 0.18), transparent 70%),
+      linear-gradient(180deg, #0b0b0c 0, #1a1a1c 380px, var(--page) 380px); }
+    .card { padding: 20px 16px; border-radius: 18px; }
+    .card h3 { margin: -20px -16px 0; padding: 14px 16px; }
+    .card.logo-wrap { width: min(100%, 180px); }
+    .tagline { font-size: 0.62rem; letter-spacing: 0.05em; }
+    .radio-group { grid-template-columns: 1fr; }
+    .row { gap: 0 12px; }
+    .row > div { min-width: 130px; }
+    .input-card .actions button, #settingsCard .actions button { width: 100%; }
+    #resultsSection > .actions button { flex: 1; }
+    .saved-row select { flex-basis: 100%; }
+    .saved-row button { flex: 1 1 auto; white-space: nowrap; }
+    .remove-team { padding: 8px 8px; }
+    .round-header { padding: 14px 16px; }
+    .round-body { padding: 10px 14px 16px; }
+    .round-locked-msg { padding: 12px 16px 14px; }
+    th, td { padding: 9px 8px; }
+  }
+
   @media print {
     .card.input-card, .card#buildTeamsCard, .card#settingsCard, .actions, .sub-card,
     .lock-badge, .round-complete, .active-teams-panel button, .dropped-teams { display: none !important; }
     .round-body { display: block !important; }
-    .round.locked .round-header { background: linear-gradient(90deg, var(--ocean) 0%, var(--ocean-light) 140%) !important; color: #fff !important; }
-    body { padding: 0; background: #fff; }
+    .round .round-header, .round.locked .round-header { background: #b3272d !important; color: #fff !important; }
+    .card, .round, .round-body { background: #fff !important; }
+    .card, .round, td { color: #262626 !important; }
+    body { padding: 0; background: #fff !important; }
+    .logo-img { filter: none; }
+    .tagline { color: #b3272d; }
     .round { break-inside: avoid; box-shadow: none; }
+    td { background: #fff !important; }
+    td:first-child { color: #b3272d !important; }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card logo-wrap">
-    <img class="logo-img" src="assets/mxd-pb-logo.jpg" alt="Mixed Pickleball logo">
+    <img class="logo-img" src="assets/mxd-pb-badge.png" alt="MXD-PB Mixed Pickleball">
   </div>
   <div class="card sub-card">
+    <p class="tagline">You bring the people. We make the game.</p>
     <p class="sub">Fixed teams with rotating opponents, or a fully random individual mixer — build a court schedule for your event.</p>
   </div>
 
@@ -688,6 +896,7 @@
         const p = editFloaters.find(x => x.id === id);
         if (p) p.name = inp.value;
       });
+      inp.addEventListener('keydown', (e) => handleNameEnter(e, editFloatersList, addEditFloater));
     });
     editFloatersList.querySelectorAll('.remove-team').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -719,6 +928,7 @@
         const p = editPlayers.find(x => x.id === id);
         if (p) p.name = inp.value;
       });
+      inp.addEventListener('keydown', (e) => handleNameEnter(e, editPlayersList, addEditPlayer));
     });
     editPlayersList.querySelectorAll('.remove-team').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -769,14 +979,37 @@
     editTeams.push({ id: nextEditId++, a: '', b: '' });
     renderEditTeams();
   });
-  document.getElementById('addFloaterBtn').addEventListener('click', () => {
+  // Enter in a name box: move to the next name box, or add a new one (with the
+  // cursor in it) when on the last box. An empty last box stays put, so holding
+  // Enter doesn't pile up blank rows.
+  function handleNameEnter(e, listEl, addFn) {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    e.preventDefault();
+    const inputs = Array.from(listEl.querySelectorAll('input[type=text]'));
+    const i = inputs.indexOf(e.target);
+    if (i >= 0 && i < inputs.length - 1) { inputs[i + 1].focus(); return; }
+    if (!e.target.value.trim()) return;
+    addFn();
+  }
+  function focusLastName(listEl) {
+    const inputs = listEl.querySelectorAll('input[type=text]');
+    const last = inputs[inputs.length - 1];
+    if (!last) return;
+    last.focus();
+    last.scrollIntoView({ block: 'nearest' });
+  }
+  function addEditFloater() {
     editFloaters.push({ id: nextEditId++, name: '' });
     renderEditFloaters();
-  });
-  document.getElementById('addPlayerBtn').addEventListener('click', () => {
+    focusLastName(editFloatersList);
+  }
+  function addEditPlayer() {
     editPlayers.push({ id: nextEditId++, name: '' });
     renderEditPlayers();
-  });
+    focusLastName(editPlayersList);
+  }
+  document.getElementById('addFloaterBtn').addEventListener('click', addEditFloater);
+  document.getElementById('addPlayerBtn').addEventListener('click', addEditPlayer);
 
   // ---------- saved team rosters ----------
   refreshRosterDropdown();
@@ -837,6 +1070,123 @@
     setPlayerLists(lists);
     refreshPlayerListDropdown();
   });
+
+  // ---------- play history: who has partnered with / played against whom ----------
+  // Rebuilt from the rounds themselves (never stored separately), so it always matches
+  // the schedule. Keyed by lower-cased name rather than id, so someone who drops and is
+  // later re-added under the same name keeps their history. In teams mode a fixed team
+  // counts as one unit (its full "A & B" name).
+  const PARTNER_REPEAT_COST = 4; // repeating a partner is worse than repeating an opponent
+  const OPPONENT_REPEAT_COST = 1;
+  const GROUPING_TRIES = 300;
+
+  function pairKey(x, y) {
+    x = x.toLowerCase(); y = y.toLowerCase();
+    return x < y ? x + '|' + y : y + '|' + x;
+  }
+  function createHistory() { return { partners: {}, opponents: {} }; }
+  function sidePlayers(side) { return side.players || [side.name]; }
+  function partnerCount(h, x, y) { return h.partners[pairKey(x, y)] || 0; }
+  function opponentCount(h, x, y) { return h.opponents[pairKey(x, y)] || 0; }
+  function recordMatch(h, match) {
+    const a = sidePlayers(match.a), b = sidePlayers(match.b);
+    [a, b].forEach(side => {
+      if (side.length === 2) { const k = pairKey(side[0], side[1]); h.partners[k] = (h.partners[k] || 0) + 1; }
+    });
+    a.forEach(x => b.forEach(y => { const k = pairKey(x, y); h.opponents[k] = (h.opponents[k] || 0) + 1; }));
+  }
+  function computeHistory(rounds) {
+    const h = createHistory();
+    rounds.forEach(round => round.heats.forEach(heat => heat.forEach(m => recordMatch(h, m))));
+    return h;
+  }
+  function matchCost(h, a, b) {
+    let cost = 0;
+    if (a.length === 2) cost += PARTNER_REPEAT_COST * partnerCount(h, a[0], a[1]);
+    if (b.length === 2) cost += PARTNER_REPEAT_COST * partnerCount(h, b[0], b[1]);
+    a.forEach(x => b.forEach(y => { cost += OPPONENT_REPEAT_COST * opponentCount(h, x, y); }));
+    return cost;
+  }
+
+  // Splits `players` (a multiple of 4) into doubles matches with as few repeat partners
+  // and opponents as possible: many random groupings of four are tried, each four is
+  // split into the best of its 3 possible team pairings, and the cheapest overall wins.
+  function bestDoublesGrouping(players, h) {
+    const splits = [[[0, 1], [2, 3]], [[0, 2], [1, 3]], [[0, 3], [1, 2]]];
+    let best = null, bestCost = Infinity;
+    for (let t = 0; t < GROUPING_TRIES && bestCost > 0; t++) {
+      const order = shuffleArray(players);
+      const groups = [];
+      let total = 0;
+      for (let g = 0; g + 4 <= order.length; g += 4) {
+        const four = order.slice(g, g + 4).map(p => p.name);
+        let pick = null, pickCost = Infinity;
+        shuffleArray(splits).forEach(([x, y]) => {
+          const a = [four[x[0]], four[x[1]]], b = [four[y[0]], four[y[1]]];
+          const c = matchCost(h, a, b);
+          if (c < pickCost) { pickCost = c; pick = [a, b]; }
+        });
+        groups.push(pick);
+        total += pickCost;
+      }
+      if (total < bestCost) { bestCost = total; best = groups; }
+    }
+    return best || [];
+  }
+
+  // Pairs up whole units (fixed teams, or floater pairs) to play each other, preferring
+  // opponents they've met the fewest times. `units` are [{name, players}]; even length.
+  function bestOpponentPairing(units, h) {
+    let best = null, bestCost = Infinity;
+    for (let t = 0; t < GROUPING_TRIES && bestCost > 0; t++) {
+      const remaining = shuffleArray(units);
+      const pairs = [];
+      let total = 0;
+      while (remaining.length >= 2) {
+        const first = remaining.shift();
+        let bi = 0, bc = Infinity;
+        remaining.forEach((u, i) => {
+          const c = matchCost(h, first.players, u.players);
+          if (c < bc) { bc = c; bi = i; }
+        });
+        pairs.push([first, remaining.splice(bi, 1)[0]]);
+        total += bc;
+      }
+      if (total < bestCost) { bestCost = total; best = pairs; }
+    }
+    return best || [];
+  }
+
+  // Teams-mode schedule used after a mid-event roster change. A fresh circle-method
+  // round robin would restart from scratch and repeat matchups already played, so
+  // instead each round pairs teams against the opponents they've faced least so far
+  // (including the frozen rounds' history). Byes still rotate fewest-sat-out first.
+  function buildTeamRoundsWithHistory(teamObjs, courts, numRounds, startRoundNumber, initialSitOutCounts, history) {
+    const counts = {};
+    teamObjs.forEach(t => { counts[t.id] = (initialSitOutCounts && initialSitOutCounts[t.id]) || 0; });
+    const rounds = [];
+    for (let i = 0; i < numRounds; i++) {
+      let byes = [];
+      let playing = teamObjs;
+      if (teamObjs.length % 2 === 1) {
+        const sitter = shuffleArray(teamObjs).sort((a, b) => counts[a.id] - counts[b.id])[0];
+        counts[sitter.id] += 1;
+        byes = [sitter];
+        playing = teamObjs.filter(t => t.id !== sitter.id);
+      }
+      const units = playing.map(t => ({ team: t, name: t.name, players: [t.name] }));
+      const matches = shuffleArray(bestOpponentPairing(units, history).map(([x, y]) => ({
+        a: { id: x.team.id, name: x.team.name, players: [x.team.name] },
+        b: { id: y.team.id, name: y.team.name, players: [y.team.name] }
+      })));
+      matches.forEach(m => recordMatch(history, m));
+      const heats = [];
+      for (let k = 0; k < matches.length; k += courts) heats.push(matches.slice(k, k + courts));
+      if (heats.length === 0) heats.push([]);
+      rounds.push({ roundNumber: startRoundNumber + i, heats, byes: byes.map(t => ({ id: t.id, name: t.name })) });
+    }
+    return rounds;
+  }
 
   // ---------- fixed-partner round-robin (teams mode) ----------
   function roundRobinIndexRounds(n) {
@@ -939,7 +1289,8 @@
   // If that leaves one pair with no other floater-pair to play, they get a match
   // against whichever fixed team has faced the floater pool the least so far, added
   // as an extra heat so it never overlaps a team's own regularly-scheduled match.
-  function mergeFloatingPoolIntoRounds(rounds, floaters, fixedTeams, initialSitOutCounts, initialBorrowCounts) {
+  function mergeFloatingPoolIntoRounds(rounds, floaters, fixedTeams, initialSitOutCounts, initialBorrowCounts, history) {
+    const h = history || createHistory();
     const sitOutCounts = {};
     floaters.forEach(f => { sitOutCounts[f.id] = (initialSitOutCounts && initialSitOutCounts[f.id]) || 0; });
     const borrowCounts = {};
@@ -950,33 +1301,40 @@
       const sittingOut = byFewestSitOuts.slice(0, 1);
       sittingOut.forEach(f => { sitOutCounts[f.id] += 1; });
       const sittingIds = new Set(sittingOut.map(f => f.id));
-      const playing = shuffleArray(floaters.filter(f => !sittingIds.has(f.id)));
+      const playing = floaters.filter(f => !sittingIds.has(f.id));
 
-      const pairs = [];
-      for (let i = 0; i < playing.length; i += 2) pairs.push([playing[i], playing[i + 1]]);
-
-      const extraMatches = [];
-      let leftoverPair = null;
-      for (let i = 0; i < pairs.length; i += 2) {
-        if (i + 1 < pairs.length) {
-          extraMatches.push({
-            a: { name: `${pairs[i][0].name} & ${pairs[i][1].name}` },
-            b: { name: `${pairs[i + 1][0].name} & ${pairs[i + 1][1].name}` }
-          });
-        } else {
-          leftoverPair = pairs[i];
-        }
+      // Floaters get new partners each round, preferring people they haven't
+      // partnered (or faced) yet. Groups of four are split best-first; a leftover
+      // pair (when the count isn't a multiple of 4) is whoever's left over.
+      const fullFours = Math.floor(playing.length / 4) * 4;
+      let best = null, bestCost = Infinity;
+      const leftoverTries = playing.length % 4 === 0 ? 1 : 25; // vary who forms the leftover pair
+      for (let t = 0; t < leftoverTries && bestCost > 0; t++) {
+        const order = shuffleArray(playing);
+        const groups = bestDoublesGrouping(order.slice(0, fullFours), h);
+        const rest = order.slice(fullFours).map(f => f.name);
+        let cost = groups.reduce((sum, [a, b]) => sum + matchCost(h, a, b), 0);
+        if (rest.length === 2) cost += PARTNER_REPEAT_COST * partnerCount(h, rest[0], rest[1]);
+        if (cost < bestCost) { bestCost = cost; best = { groups, rest }; }
       }
-      if (leftoverPair) {
-        const opponent = fixedTeams.slice().sort((a, b) => borrowCounts[a.id] - borrowCounts[b.id])[0];
+
+      const extraMatches = best.groups.map(([a, b]) => ({
+        a: { name: `${a[0]} & ${a[1]}`, players: a },
+        b: { name: `${b[0]} & ${b[1]}`, players: b }
+      }));
+      if (best.rest.length === 2) {
+        const leftover = best.rest;
+        const opponent = fixedTeams.slice().sort((a, b) =>
+          (borrowCounts[a.id] - borrowCounts[b.id]) ||
+          (matchCost(h, leftover, [a.name]) - matchCost(h, leftover, [b.name])))[0];
         borrowCounts[opponent.id] += 1;
         extraMatches.push({
-          a: { name: `${leftoverPair[0].name} & ${leftoverPair[1].name}` },
-          b: { name: opponent.name }
+          a: { name: `${leftover[0]} & ${leftover[1]}`, players: leftover },
+          b: { name: opponent.name, players: [opponent.name] }
         });
       }
 
-      extraMatches.forEach(m => round.heats.push([m]));
+      extraMatches.forEach(m => { recordMatch(h, m); round.heats.push([m]); });
       round.byes = round.byes.concat(sittingOut.map(f => ({ id: f.id, name: f.name })));
     });
   }
@@ -1025,7 +1383,8 @@
   // scratch, but WHO sits out is decided separately: whoever has sat out the fewest
   // times so far (starting from initialSitOutCounts) gets priority to sit, so sit-outs
   // rotate through everyone once before anyone sits a second time.
-  function buildRandomRounds(playerObjs, courts, numRounds, startRoundNumber, initialSitOutCounts) {
+  function buildRandomRounds(playerObjs, courts, numRounds, startRoundNumber, initialSitOutCounts, history) {
+    const h = history || createHistory();
     const counts = {};
     playerObjs.forEach(p => { counts[p.id] = (initialSitOutCounts && initialSitOutCounts[p.id]) || 0; });
 
@@ -1044,16 +1403,14 @@
         sittingOut.forEach(p => { counts[p.id] += 1; });
       }
 
-      const playing = shuffleArray(playingPool);
-      const numGroups = Math.floor(playing.length / 4);
-      const matches = [];
-      for (let g = 0; g < numGroups; g++) {
-        const four = playing.slice(g * 4, g * 4 + 4);
-        matches.push({
-          a: { name: `${four[0].name} & ${four[1].name}` },
-          b: { name: `${four[2].name} & ${four[3].name}` }
-        });
-      }
+      // Partners and opponents are picked to avoid anyone already played with or
+      // against (per `h`, which carries the history of earlier rounds — including
+      // rounds played before a mid-event roster change), then randomized among ties.
+      const matches = shuffleArray(bestDoublesGrouping(playingPool, h).map(([a, b]) => ({
+        a: { name: `${a[0]} & ${a[1]}`, players: a },
+        b: { name: `${b[0]} & ${b[1]}`, players: b }
+      })));
+      matches.forEach(m => recordMatch(h, m));
       const heats = [];
       for (let k = 0; k < matches.length; k += courts) heats.push(matches.slice(k, k + courts));
       if (heats.length === 0) heats.push([]);
@@ -1178,13 +1535,16 @@
     const frozenCount = Math.min(completedCount + 1, displayRounds.length);
     const frozenRounds = displayRounds.slice(0, frozenCount);
     const sitOutCounts = computeSitOutCounts(frozenRounds);
+    // Who has already partnered / faced whom stays remembered across the roster
+    // change, so the regenerated rounds keep avoiding repeats.
+    const history = computeHistory(frozenRounds);
 
     let newFutureRounds;
     if (mixerMode === 'individual') {
       const activePlayerObjs = eventPlayers.filter(p => p.active).map(p => ({ id: p.id, name: p.name }));
       const futureCount = Math.max((desiredRoundsTotal || 0) - frozenCount, 0);
       newFutureRounds = activePlayerObjs.length >= 4
-        ? buildRandomRounds(activePlayerObjs, courtsValue, futureCount, frozenCount + 1, sitOutCounts)
+        ? buildRandomRounds(activePlayerObjs, courtsValue, futureCount, frozenCount + 1, sitOutCounts, history)
         : [];
     } else {
       const activeTeamObjs = eventTeams.filter(t => t.active).map(t => ({ id: t.id, name: t.name }));
@@ -1210,15 +1570,15 @@
         }
       }
 
-      const orderedTeams = reorderTeamsForFairness(workingTeams, sitOutCounts);
-      let futureCount = null;
+      // "Full round robin" = one full cycle for the new roster (n-1 rounds, or n with a bye).
+      let futureCount = workingTeams.length % 2 === 0 ? workingTeams.length - 1 : workingTeams.length;
       if (roundsSettingValue === 'custom') futureCount = Math.max((desiredRoundsTotal || 0) - frozenCount, 0);
       newFutureRounds = workingTeams.length >= 2
-        ? buildDisplayRounds(orderedTeams, courtsValue, futureCount, frozenCount + 1)
+        ? buildTeamRoundsWithHistory(workingTeams, courtsValue, futureCount, frozenCount + 1, sitOutCounts, history)
         : createEmptyRounds(Math.max((desiredRoundsTotal || 0) - frozenCount, 0), frozenCount + 1);
 
       if (workingFloaterPool.length > 0) {
-        mergeFloatingPoolIntoRounds(newFutureRounds, workingFloaterPool, workingTeams, sitOutCounts, {});
+        mergeFloatingPoolIntoRounds(newFutureRounds, workingFloaterPool, workingTeams, sitOutCounts, {}, history);
       }
     }
 

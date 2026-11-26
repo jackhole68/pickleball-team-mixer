@@ -1,9 +1,9 @@
-const CACHE_NAME = 'mxd-pb-mixer-v4';
+const CACHE_NAME = 'mxd-pb-mixer-v9';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
-  './assets/mxd-pb-logo.jpg',
+  './assets/mxd-pb-badge.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png'
