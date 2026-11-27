@@ -13,6 +13,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MXD-PB Mixer">
+<script>
+  try { var t = localStorage.getItem('mxdpb-theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+</script>
 <style>
   /* Look: dark mode in the original MXD-PB colors: brand red on charcoal, with the logo's cream as the highlight. */
   :root {
@@ -524,10 +527,113 @@
     td { background: #fff !important; }
     td:first-child { color: #b3272d !important; }
   }
+
+  /* Theme toggle */
+  .wrap { position: relative; }
+  .theme-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: none;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .theme-toggle:hover { background: rgba(255,255,255,0.16); filter: none; }
+  .theme-toggle .icon { font-size: 1rem; line-height: 1; }
+
+  /* Light theme: the original MXD-PB look (brand red on light gray and white) */
+  :root[data-theme="light"] {
+    --red: #b3272d;
+    --red-dark: #8c1f24;
+    --red-bright: #c9353b;
+    --cream: #7d1b1f;
+    --green: #2f8a4e;
+    --green-dark: #22683a;
+    --page: #f4f4f4;
+    --card: #ffffff;
+    --surface-2: #f6f6f6;
+    --line: #dcdcdc;
+    --line-strong: #c4c4c4;
+    --text: #262626;
+    --muted: #6f6f6f;
+    --tint-red: #fdecec;
+    --tint-blue: #f3f3f3;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.08);
+    --focus: 0 0 0 3px rgba(179, 39, 45, 0.25);
+    --ocean-dark: #7d1b1f;
+    color-scheme: light;
+  }
+  :root[data-theme="light"] body {
+    background-image:
+      radial-gradient(900px 420px at 85% -60px, rgba(179, 39, 45, 0.10), transparent 70%),
+      linear-gradient(180deg, #ffffff 0, #f4f4f4 430px);
+    background-size: 100% 430px, 100% 100%;
+  }
+  :root[data-theme="light"] .theme-toggle { background: #fff; border-color: var(--line-strong); color: var(--text); }
+  :root[data-theme="light"] .theme-toggle:hover { background: var(--tint-red); }
+  :root[data-theme="light"] .logo-img { filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.18)); }
+  :root[data-theme="light"] .tagline { color: var(--red); }
+  :root[data-theme="light"] .sub { color: var(--muted); }
+  :root[data-theme="light"] .card { border: 1px solid var(--line); }
+  :root[data-theme="light"] .card.logo-wrap, :root[data-theme="light"] .card.sub-card { border: none; }
+  :root[data-theme="light"] .card h3 {
+    background: #fff;
+    color: var(--red-dark);
+    border-bottom: 3px solid var(--red);
+  }
+  :root[data-theme="light"] textarea,
+  :root[data-theme="light"] input[type=number],
+  :root[data-theme="light"] input[type=text],
+  :root[data-theme="light"] select,
+  :root[data-theme="light"] .saved-row select { background: #fff; }
+  :root[data-theme="light"] textarea::placeholder,
+  :root[data-theme="light"] input::placeholder { color: #a3a3a3; }
+  :root[data-theme="light"] .radio-group label { background: #fff; }
+  :root[data-theme="light"] .radio-group label:has(input:checked) { background: var(--red); color: #fff; box-shadow: inset 0 -4px 0 var(--red-dark); }
+  :root[data-theme="light"] .radio-group input { accent-color: #fff; }
+  :root[data-theme="light"] #generateBtn {
+    background: linear-gradient(180deg, #4a4a4a 0%, #2b2b2b 100%);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  }
+  :root[data-theme="light"] button.danger { color: var(--red); }
+  :root[data-theme="light"] .remove-team:hover { color: var(--red); }
+  :root[data-theme="light"] .saved-row { background: var(--surface-2); }
+  :root[data-theme="light"] .active-team-chip { background: #f6e7e8; border-color: #ebc9cb; color: var(--red-dark); }
+  :root[data-theme="light"] .active-team-chip button { background: #fff; color: var(--red); }
+  :root[data-theme="light"] .active-team-chip button:hover { background: var(--red); color: #fff; }
+  :root[data-theme="light"] .dropped-team-chip { background: #ececec; color: #8a8a8a; }
+  :root[data-theme="light"] .round.complete .round-header { background: linear-gradient(100deg, #3a3a3a 0%, #6b6b6b 100%); }
+  :root[data-theme="light"] .round.locked { background: #fafafa; }
+  :root[data-theme="light"] .round.locked .round-header { background: #ececec; color: var(--muted); }
+  :root[data-theme="light"] .round.locked .lock-badge { background: rgba(0,0,0,0.06); color: var(--muted); }
+  :root[data-theme="light"] .lock-badge { background: #fff; color: var(--red-dark); }
+  :root[data-theme="light"] .round.complete .lock-badge { background: #e5f6ec; color: var(--green-dark); }
+  :root[data-theme="light"] td:first-child { background: var(--red); color: #fff; }
+  :root[data-theme="light"] th:nth-child(3) { color: #6b6b6b; }
+  :root[data-theme="light"] td:nth-child(3) { box-shadow: inset 4px 0 0 #6b6b6b; }
+  :root[data-theme="light"] .heat-label { background: var(--red-dark); color: #fff; }
+  :root[data-theme="light"] .bye { background: #fafafa; color: #5a5a5a; }
+  :root[data-theme="light"] .round-complete { background: #fff; }
+  :root[data-theme="light"] .round-complete:has(input:checked) { background: #e9f6ee; color: var(--green-dark); }
+  @media print { .theme-toggle { display: none !important; } }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to light mode"><span class="icon" aria-hidden="true">☀️</span><span class="label">Light</span></button>
   <div class="card logo-wrap">
     <img class="logo-img" src="assets/mxd-pb-badge.png" alt="MXD-PB Mixed Pickleball">
   </div>
@@ -1776,6 +1882,27 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     });
   }
+})();
+</script>
+<script>
+(function () {
+  var btn = document.getElementById('themeToggle');
+  var meta = document.querySelector('meta[name="theme-color"]');
+  function current() { return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
+  function render() {
+    var light = current() === 'light';
+    btn.querySelector('.icon').textContent = light ? '🌙' : '☀️';
+    btn.querySelector('.label').textContent = light ? 'Dark' : 'Light';
+    btn.setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode');
+    if (meta) meta.setAttribute('content', light ? '#b3272d' : '#121213');
+  }
+  btn.addEventListener('click', function () {
+    var next = current() === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('mxdpb-theme', next); } catch (e) {}
+    render();
+  });
+  render();
 })();
 </script>
 </body>
