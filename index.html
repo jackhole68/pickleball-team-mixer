@@ -1875,7 +1875,12 @@
   // ---------- rounds accordion ----------
   function updateRoundVisibility() {
     const roundEls = scheduleContainer.querySelectorAll('.round');
+    // No round numbers: label each round by where it stands right now.
+    let current = roundStates.findIndex(done => !done);
+    if (current === -1) current = roundEls.length;
     roundEls.forEach((roundDiv, idx) => {
+      const title = roundDiv.querySelector('.round-header h2');
+      if (title) title.textContent = idx < current ? 'Played' : idx === current ? 'This round' : idx === current + 1 ? 'Next round' : 'Coming up';
       const unlocked = idx === 0 || roundStates[idx - 1];
       const complete = !!roundStates[idx];
       const body = roundDiv.querySelector('.round-body');
@@ -1899,12 +1904,12 @@
 
       const header = document.createElement('div');
       header.className = 'round-header';
-      header.innerHTML = `<h2>Round ${round.roundNumber}</h2><span class="lock-badge">🔒 Locked</span>`;
+      header.innerHTML = `<h2>Next round</h2><span class="lock-badge">🔒 Locked</span>`;
       roundDiv.appendChild(header);
 
       const lockedMsg = document.createElement('div');
       lockedMsg.className = 'round-locked-msg';
-      lockedMsg.textContent = `Complete Round ${round.roundNumber - 1} to unlock this round.`;
+      lockedMsg.textContent = 'Finish the round above to unlock this one.';
       roundDiv.appendChild(lockedMsg);
 
       const body = document.createElement('div');
@@ -1946,7 +1951,7 @@
 
       const completeLabel = document.createElement('label');
       completeLabel.className = 'round-complete';
-      completeLabel.innerHTML = `<input type="checkbox" data-round="${roundIdx}"> Mark Round ${round.roundNumber} complete${roundIdx < displayRounds.length - 1 ? ' — unlock next round' : ''}`;
+      completeLabel.innerHTML = `<input type="checkbox" data-round="${roundIdx}"> Mark this round complete${roundIdx < displayRounds.length - 1 ? ' — unlock next round' : ''}`;
       body.appendChild(completeLabel);
 
       roundDiv.appendChild(body);
