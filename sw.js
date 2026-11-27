@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mxd-pb-mixer-v11';
+const CACHE_NAME = 'mxd-pb-mixer-v12';
 const APP_SHELL = [
   './',
   './index.html',
