@@ -785,6 +785,15 @@
       <div class="hint">Uses the same names, but breaks up the pairs above and reshuffles everyone into new teams each round — just like the individual mixer.</div>
     </div>
 
+    <div class="field" id="tFormatField" style="display:none;">
+      <label for="tFormat">Tournament format</label>
+      <select id="tFormat">
+        <option value="pool">Pool play + playoffs</option>
+        <option value="moneyball">Moneyball (court ladder)</option>
+      </select>
+      <div class="hint" id="tFormatHint" style="margin-top:6px;"></div>
+    </div>
+
     <div class="row">
       <div class="field">
         <label for="courts">Number of courts</label>
@@ -806,6 +815,10 @@
       <div class="field" id="customRoundsField" style="display:none;">
         <label for="customRounds">How many rounds</label>
         <input type="number" id="customRounds" min="1" value="3">
+      </div>
+      <div class="field" id="mbRoundsField" style="display:none;">
+        <label for="mbRounds">Number of rounds</label>
+        <input type="number" id="mbRounds" min="1" value="7">
       </div>
       <div class="field" id="playoffField" style="display:none;">
         <label for="playoffSize">Playoffs after pool play</label>
@@ -1173,8 +1186,10 @@
       document.getElementById('drawTeamsBtn').style.display = isTournament ? '' : 'none';
       document.getElementById('floatersHint').style.display = isTournament ? 'none' : 'block';
       document.getElementById('floatersHintTournament').style.display = isTournament ? 'block' : 'none';
-      document.getElementById('step3Heading').textContent = isTournament ? 'Step 3 · Courts, Pool Play & Playoffs' : 'Step 3 · Courts & Rounds';
+      document.getElementById('step3Heading').textContent = isTournament ? 'Step 3 · Format, Courts & Rounds' : 'Step 3 · Courts & Rounds';
       document.getElementById('generateBtn').textContent = isTournament ? 'Start Tournament' : 'Generate Schedule';
+      document.getElementById('tFormatField').style.display = isTournament ? 'block' : 'none';
+      if (isTournament) applyTournamentFormatUI(); else document.getElementById('mbRoundsField').style.display = 'none';
       buildTeamsCard.style.display = 'block';
       settingsCard.style.display = 'block';
       buildTeamsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1954,9 +1969,10 @@
   }
 
   // ---------- tournament mode ----------
-  // Fixed teams play pool rounds (a round robin) with scores, a live standings
-  // table ranks them (wins, then point difference, then points scored), and the
-  // top teams can go on to a single-elimination bracket. The whole tournament is
+  // Two formats with fixed teams. Pool play + playoffs: a round robin with scores,
+  // a live standings table (wins, then point difference, then points scored), then
+  // the top teams play a single-elimination bracket. Moneyball: a court ladder where
+  // winners move up toward the Court 1 "money court" and losers move down. The whole tournament is
   // saved in this browser, so a refresh or a closed tab mid-event loses nothing.
   const T_KEY = 'pbMixer.tournament';
   const tournamentSection = document.getElementById('tournamentSection');
@@ -1966,7 +1982,112 @@
   const championWrap = document.getElementById('championWrap');
   const standingsTable = document.getElementById('standingsTable');
   const standingsHint = document.getElementById('standingsHint');
-  let tournament = null; // {teams:[{id,name}], courts, playoffSize, pool:[{roundNumber, heats:[[match]], byes:[id]}], bracket}
+  // {format: 'pool'|'moneyball', teams:[{id,name}], courts, playoffSize, totalRounds,
+  //  pool:[{roundNumber, heats:[[match]], byes:[id]}], bracket}. In moneyball, "pool" holds
+  //  the ladder rounds played so far: one heat whose matches are in court order (Court 1 first).
+  let tournament = null;
+  function isMoneyball() { return !!tournament && tournament.format === 'moneyball'; }
+
+  const tFormatSelect = document.getElementById('tFormat');
+  function applyTournamentFormatUI() {
+    const mb = tFormatSelect.value === 'moneyball';
+    teamsRoundsControls.style.display = mb ? 'none' : 'block';
+    customRoundsField.style.display = (!mb && roundsMode.value === 'custom') ? 'block' : 'none';
+    document.getElementById('playoffField').style.display = mb ? 'none' : 'block';
+    document.getElementById('mbRoundsField').style.display = mb ? 'block' : 'none';
+    document.getElementById('tFormatHint').textContent = mb
+      ? 'Court 1 is the money court. After each round, winners move up a court and losers move down. The team that wins on Court 1 in the last round is the champion. Teams that don\'t fit on a court wait at the bottom and rotate in.'
+      : 'Everyone plays a round robin with scores and standings, then the top teams play a single-elimination bracket.';
+  }
+  tFormatSelect.addEventListener('change', applyTournamentFormatUI);
+  roundsMode.addEventListener('change', () => { if (mixerMode === 'tournament') applyTournamentFormatUI(); });
+
+  // ---------- moneyball ladder ----------
+  function roundMatches(round) { return round.heats.flat(); }
+  function roundDone(round) { const ms = roundMatches(round); return ms.length > 0 && ms.every(m => matchWinner(m) != null); }
+  function roundEmpty(round) { return roundMatches(round).every(m => m.sa == null && m.sb == null); }
+  let mbMatchNo = 0;
+  function mbMatch(a, b) { return { id: 'm' + Date.now().toString(36) + '-' + (++mbMatchNo), a, b, sa: null, sb: null }; }
+  function makeMbRound(roundNumber, courtPairs, waiting) {
+    return { roundNumber, heats: [courtPairs.map(([a, b]) => mbMatch(a, b))], byes: waiting.slice() };
+  }
+  // Builds the next ladder round from a finished one. Winners move up one court
+  // (the Court 1 winner stays), losers move down one (the bottom loser stays, or
+  // drops into the waiting line when there is one). With 2+ teams waiting, two
+  // come in on the bottom court each round and both bottom-two losers wait.
+  function nextMbRound(prev) {
+    const ms = roundMatches(prev);
+    const C = ms.length;
+    const W = ms.map(matchWinner);
+    const L = ms.map((m, i) => (W[i] === m.a ? m.b : m.a));
+    const queue = prev.byes.slice();
+    const pairs = [];
+    if (C === 1) {
+      if (queue.length) { pairs.push([W[0], queue.shift()]); queue.push(L[0]); }
+      else pairs.push([W[0], L[0]]);
+      return makeMbRound(prev.roundNumber + 1, pairs, queue);
+    }
+    pairs.push([W[0], W[1]]);
+    for (let k = 1; k < C - 1; k++) pairs.push([L[k - 1], W[k + 1]]);
+    if (queue.length >= 2) {
+      const inA = queue.shift(), inB = queue.shift();
+      pairs.push([inA, inB]);
+      queue.push(L[C - 2], L[C - 1]);
+    } else if (queue.length === 1) {
+      pairs.push([L[C - 2], queue.shift()]);
+      queue.push(L[C - 1]);
+    } else {
+      pairs.push([L[C - 2], L[C - 1]]);
+    }
+    return makeMbRound(prev.roundNumber + 1, pairs, queue);
+  }
+  function sameRound(x, y) {
+    const key = r => roundMatches(r).map(m => m.a + '-' + m.b).join('|') + '/' + r.byes.join(',');
+    return key(x) === key(y);
+  }
+  // Called once a score box is finished (change event): opens the next round when
+  // the current one is done, and redraws the next round if an earlier result was
+  // corrected before any of its games were scored.
+  function advanceMoneyball() {
+    const rounds = tournament.pool;
+    let changed = false;
+    if (rounds.length > 1 && roundEmpty(rounds[rounds.length - 1])) {
+      const prev = rounds[rounds.length - 2];
+      if (!roundDone(prev)) { rounds.pop(); changed = true; }
+      else {
+        const regen = nextMbRound(prev);
+        if (!sameRound(regen, rounds[rounds.length - 1])) { rounds[rounds.length - 1] = regen; changed = true; }
+      }
+    }
+    const last = rounds[rounds.length - 1];
+    if (roundDone(last) && rounds.length < tournament.totalRounds) { rounds.push(nextMbRound(last)); changed = true; }
+    if (changed) { saveTournament(); renderTournament(); }
+  }
+  // Only the current round can be edited, plus the one before it while the current
+  // round has no scores yet (so a typo can still be fixed).
+  function mbLockedMatchIds() {
+    const rounds = tournament.pool;
+    const editableFrom = rounds.length > 1 && roundEmpty(rounds[rounds.length - 1]) ? rounds.length - 2 : rounds.length - 1;
+    return new Set(rounds.slice(0, editableFrom).flatMap(roundMatches).map(m => m.id));
+  }
+  // Ladder order after the latest finished round: Court 1 winner, Court 1 loser,
+  // Court 2 winner, ... then the waiting line. Before any round finishes, the
+  // first round's court order is used.
+  function mbLadder() {
+    const rounds = tournament.pool;
+    let done = null;
+    for (let i = rounds.length - 1; i >= 0; i--) if (roundDone(rounds[i])) { done = rounds[i]; break; }
+    const src = done || rounds[0];
+    const order = [];
+    roundMatches(src).forEach((m, i) => {
+      const w = done ? matchWinner(m) : m.a;
+      const l = w === m.a ? m.b : m.a;
+      order.push({ id: w, court: i + 1 }, { id: l, court: i + 1 });
+    });
+    src.byes.forEach(id => order.push({ id, court: null }));
+    return { order, finishedRound: done ? done.roundNumber : 0 };
+  }
+  function mbCourtLabel(i) { return i === 0 ? 'Court 1 · 💰 Money court' : `Court ${i + 1}`; }
 
   function saveTournament() {
     try { if (tournament) saveJSON(T_KEY, tournament); else localStorage.removeItem(T_KEY); } catch (e) {}
@@ -2029,6 +2150,10 @@
       rb.pf += m.sb; rb.pa += m.sa;
       if (m.sa > m.sb) { ra.w++; rb.l++; } else { rb.w++; ra.l++; }
     });
+    if (isMoneyball()) {
+      const { order } = mbLadder();
+      return order.map(o => Object.assign(rows[o.id], { court: o.court }));
+    }
     return Object.values(rows).sort((x, y) =>
       (y.w - x.w) || ((y.pf - y.pa) - (x.pf - x.pa)) || (y.pf - x.pf) || x.name.localeCompare(y.name));
   }
@@ -2049,6 +2174,24 @@
       for (let i = 0; i < shuffled.length; i += 2) teams.push({ id: nextEditId++, name: `${shuffled[i]} & ${shuffled[i + 1]}` });
       if (teams.length < 2) throw new Error('A tournament needs at least 2 teams.');
 
+      if (tFormatSelect.value === 'moneyball') {
+        if (teams.length < 2) throw new Error('Moneyball needs at least 2 teams.');
+        const totalRounds = parseInt(document.getElementById('mbRounds').value, 10);
+        if (!totalRounds || totalRounds < 1) throw new Error('Enter a valid number of rounds.');
+        const C = Math.min(courts, Math.floor(teams.length / 2));
+        const order = shuffleArray(teams.map(t => t.id));
+        const pairs = [];
+        for (let i = 0; i < C; i++) pairs.push([order[2 * i], order[2 * i + 1]]);
+        tournament = { format: 'moneyball', teams, courts: C, playoffSize: 0, totalRounds, pool: [makeMbRound(1, pairs, order.slice(2 * C))], bracket: null };
+        saveTournament();
+        renderTournament();
+        resultsSection.style.display = 'none';
+        tournamentSection.style.display = 'block';
+        setResumeBar(false);
+        tournamentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+
       let desiredRounds = null;
       if (roundsMode.value === 'custom') {
         desiredRounds = parseInt(document.getElementById('customRounds').value, 10);
@@ -2058,6 +2201,7 @@
       const rounds = buildDisplayRounds(reorderTeamsForFairness(teams, {}), courts, desiredRounds, 1);
       let matchNo = 0;
       tournament = {
+        format: 'pool',
         teams,
         courts,
         playoffSize: parseInt(document.getElementById('playoffSize').value, 10) || 0,
@@ -2135,6 +2279,11 @@
   }
 
   function championId() {
+    if (isMoneyball()) {
+      const rounds = tournament.pool;
+      const last = rounds[rounds.length - 1];
+      return rounds.length >= tournament.totalRounds && roundDone(last) ? matchWinner(roundMatches(last)[0]) : null;
+    }
     if (tournament.bracket) {
       const rounds = tournament.bracket.rounds;
       return matchWinner(rounds[rounds.length - 1][0]);
@@ -2160,6 +2309,29 @@
 
   function renderTournament() {
     if (!tournament) return;
+    if (isMoneyball()) {
+      // Newest round first, since that's the one being played.
+      const rounds = tournament.pool;
+      poolContainer.innerHTML = rounds.map((round, rIdx) => {
+        const cards = roundMatches(round).map((m, i) => matchCardHtml(m, mbCourtLabel(i))).join('');
+        const waiting = round.byes.length ? `<p class="bye">Waiting this round: ${round.byes.map(id => escapeHtml(tTeamName(id))).join(', ')}</p>` : '';
+        return `<div class="round" data-pool-round="${rIdx}"><div class="round-header"><h2>Round ${round.roundNumber} of ${tournament.totalRounds}</h2><span class="lock-badge"></span></div>` +
+          `<div class="round-body"><div class="t-matches">${cards}</div>${waiting}</div></div>`;
+      }).reverse().join('');
+      bracketWrap.innerHTML = '';
+      tournamentSection.querySelectorAll('input.t-score').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const m = findMatch(inp.dataset.mid);
+          if (!m) return;
+          m[inp.dataset.score] = parseScore(inp.value);
+          saveTournament();
+          refreshTournament();
+        });
+        inp.addEventListener('change', advanceMoneyball);
+      });
+      refreshTournament();
+      return;
+    }
     // Pool rounds
     poolContainer.innerHTML = tournament.pool.map((round, rIdx) => {
       const totalHeats = round.heats.length;
@@ -2215,6 +2387,7 @@
   // Updates everything that depends on scores without rebuilding the score boxes,
   // so the phone keyboard stays open while scores are typed in.
   function refreshTournament() {
+    const locked = isMoneyball() ? mbLockedMatchIds() : new Set();
     tournamentSection.querySelectorAll('.t-match[data-mid]').forEach(card => {
       const m = findMatch(card.dataset.mid);
       if (!m) return;
@@ -2232,7 +2405,7 @@
         const seedEl = sideEl.querySelector('.t-seed');
         if (seedEl) seedEl.textContent = id != null && tournament.bracket && tournament.bracket.seeds[id] ? '#' + tournament.bracket.seeds[id] : '';
         const inp = sideEl.querySelector('input.t-score');
-        inp.disabled = !ready;
+        inp.disabled = !ready || locked.has(m.id);
         const val = m[key === 'a' ? 'sa' : 'sb'];
         if (document.activeElement !== inp && String(val == null ? '' : val) !== inp.value) inp.value = val == null ? '' : val;
       });
@@ -2247,6 +2420,27 @@
       el.classList.toggle('complete', complete);
       el.querySelector('.lock-badge').textContent = complete ? '✅ Complete' : `${done} of ${ms.length} scored`;
     });
+
+    if (isMoneyball()) {
+      const standings = computeStandings();
+      const { finishedRound } = mbLadder();
+      standingsTable.innerHTML = '<table class="t-table"><thead><tr><th class="num">#</th><th>Team</th><th class="num">Court</th><th class="num">W</th><th class="num">L</th><th class="num">+/−</th></tr></thead><tbody>' +
+        standings.map((row, i) => {
+          const diff = row.pf - row.pa;
+          return `<tr class="${row.court === 1 ? 'qualifies' : ''}"><td class="num">${i + 1}</td><td class="team">${escapeHtml(row.name)}</td>` +
+            `<td class="num">${row.court == null ? 'Wait' : (row.court === 1 ? '💰 1' : row.court)}</td><td class="num">${row.w}</td><td class="num">${row.l}</td>` +
+            `<td class="num">${diff > 0 ? '+' : ''}${diff}</td></tr>`;
+        }).join('') + '</tbody></table>';
+      standingsHint.textContent = (finishedRound
+        ? `The ladder after Round ${finishedRound} of ${tournament.totalRounds}, ranked by the court each team finished on (winner first).`
+        : `Round 1 of ${tournament.totalRounds} is under way. The ladder updates as each round finishes.`) +
+        ' Court 1 is the money court: win there in the last round to take the title.';
+      const champ = championId();
+      championWrap.innerHTML = champ != null
+        ? `<div class="t-champion"><div class="trophy">🏆</div><div class="label">Moneyball Champions</div><div class="name">${escapeHtml(tTeamName(champ))}</div></div>`
+        : '';
+      return;
+    }
 
     // Standings
     const standings = computeStandings();
@@ -2288,15 +2482,15 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   document.getElementById('tCsvBtn').addEventListener('click', () => {
-    const rows = [['Pool play'], ['Round', 'Heat', 'Court', 'Team A', 'Score A', 'Score B', 'Team B']];
+    const rows = [[isMoneyball() ? 'Moneyball rounds' : 'Pool play'], ['Round', 'Heat', 'Court', 'Team A', 'Score A', 'Score B', 'Team B']];
     tournament.pool.forEach(round => {
       round.heats.forEach((heat, hIdx) => heat.forEach((m, i) => {
         rows.push([round.roundNumber, hIdx + 1, i + 1, tTeamName(m.a), m.sa == null ? '' : m.sa, m.sb == null ? '' : m.sb, tTeamName(m.b)]);
       }));
-      round.byes.forEach(id => rows.push([round.roundNumber, '-', '-', tTeamName(id) + ' (SITTING OUT)', '', '', '']));
+      round.byes.forEach(id => rows.push([round.roundNumber, '-', '-', tTeamName(id) + (isMoneyball() ? ' (WAITING)' : ' (SITTING OUT)'), '', '', '']));
     });
-    rows.push([], ['Standings'], ['Rank', 'Team', 'Wins', 'Losses', 'Points for', 'Points against', '+/-']);
-    computeStandings().forEach((r, i) => rows.push([i + 1, r.name, r.w, r.l, r.pf, r.pa, r.pf - r.pa]));
+    rows.push([], ['Standings'], ['Rank', 'Team', 'Wins', 'Losses', 'Points for', 'Points against', '+/-'].concat(isMoneyball() ? ['Court'] : []));
+    computeStandings().forEach((r, i) => rows.push([i + 1, r.name, r.w, r.l, r.pf, r.pa, r.pf - r.pa].concat(isMoneyball() ? [r.court == null ? 'Waiting' : r.court] : [])));
     if (tournament.bracket) {
       rows.push([], ['Playoffs'], ['Round', 'Seed A', 'Team A', 'Score A', 'Score B', 'Team B', 'Seed B']);
       const seeds = tournament.bracket.seeds;
@@ -2323,6 +2517,7 @@
     const saved = loadJSON(T_KEY, null);
     if (!saved || !Array.isArray(saved.teams) || !Array.isArray(saved.pool)) return;
     tournament = saved;
+    if (!tournament.format) tournament.format = 'pool';
     // Keep new ids clear of the saved tournament's team ids.
     tournament.teams.forEach(t => { if (t.id >= nextEditId) nextEditId = t.id + 1; });
     renderTournament();
