@@ -1073,6 +1073,8 @@
         const team = editTeams.find(t => t.id === id);
         if (team) team[side] = inp.value;
       });
+      // Enter: Player A → Player B → next team's Player A, adding a new team at the end.
+      inp.addEventListener('keydown', (e) => handleNameEnter(e, editTeamsList, addEditTeam));
     });
     editTeamsList.querySelectorAll('.remove-team').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1198,10 +1200,15 @@
     }
   });
 
-  document.getElementById('addTeamBtn').addEventListener('click', () => {
+  // New team row with the cursor in its Player A box.
+  function addEditTeam() {
     editTeams.push({ id: nextEditId++, a: '', b: '' });
     renderEditTeams();
-  });
+    const rows = editTeamsList.querySelectorAll('.edit-team-row');
+    const first = rows.length ? rows[rows.length - 1].querySelector('input[type=text]') : null;
+    if (first) { first.focus(); first.scrollIntoView({ block: 'nearest' }); }
+  }
+  document.getElementById('addTeamBtn').addEventListener('click', addEditTeam);
   // Enter in a name box: move to the next name box, or add a new one (with the
   // cursor in it) when on the last box. An empty last box stays put, so holding
   // Enter doesn't pile up blank rows.
@@ -1857,6 +1864,9 @@
   document.getElementById('addTeamMidEventBtn').addEventListener('click', addTeamMidEvent);
   document.getElementById('addPlayerMidEventInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') addPlayerMidEvent();
+  });
+  document.getElementById('addTeamMidEventA').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); document.getElementById('addTeamMidEventB').focus(); }
   });
   document.getElementById('addTeamMidEventB').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') addTeamMidEvent();
