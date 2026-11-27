@@ -643,14 +643,20 @@
   .t-table td:first-child { border-radius: 10px 0 0 10px; color: var(--muted); font-weight: 800; width: 1%; }
   .t-table td:last-child { border-radius: 0 10px 10px 0; }
   .t-table td.num, .t-table th.num { text-align: center; width: 1%; white-space: nowrap; }
-  .t-table td.team { overflow-wrap: anywhere; }
+  .t-table td.team { overflow-wrap: break-word; }
+  @media (max-width: 560px) {
+    .t-table th, .t-table td { padding: 8px 5px; }
+    .t-table th { font-size: 0.62rem; letter-spacing: 0.02em; }
+    .t-table .pts { display: none; }
+    .t-table td:nth-last-child(2) { border-radius: 0 10px 10px 0; }
+  }
   .t-table tr.qualifies td:first-child { color: var(--cream); box-shadow: inset 4px 0 0 var(--red); }
   .t-table tr.cutoff td { border-bottom: 2px dashed var(--red); }
   .t-matches { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin-top: 10px; }
   .t-match { background: var(--surface-2); border: 2px solid transparent; border-radius: var(--radius-sm); padding: 10px 12px; }
   .t-match.done { border-color: var(--green-dark); }
   .t-court { display: flex; justify-content: space-between; gap: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px; }
-  .t-side { display: flex; align-items: center; gap: 10px; padding: 3px 0; }
+  .t-side { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
   .t-side .t-seed { flex: none; min-width: 1.4em; font-size: 0.72rem; font-weight: 800; color: var(--muted); }
   .t-side .t-name { flex: 1; min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
   .t-side.win .t-name { color: var(--green); }
@@ -658,6 +664,11 @@
   .t-side.tbd .t-name { color: var(--muted); font-style: italic; font-weight: 600; }
   input[type=number].t-score { flex: none; width: 70px; min-height: 42px; padding: 6px 8px; text-align: center; font-weight: 800; font-size: 1rem; }
   input[type=number].t-score:disabled { opacity: 0.4; }
+  input[type=number].t-score-sm { width: 50px; padding: 6px 2px; font-size: 0.95rem; -moz-appearance: textfield; }
+  input[type=number].t-score-sm::-webkit-inner-spin-button, input[type=number].t-score-sm::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number].t-score.game-win { border-color: var(--green-dark); color: var(--green); }
+  .t-game-head { padding: 0; }
+  .t-game-label { flex: none; width: 50px; text-align: center; font-size: 0.66rem; font-weight: 800; color: var(--muted); letter-spacing: 0.06em; }
   .t-note { display: none; color: #e5676c; font-size: 0.74rem; font-weight: 700; margin-top: 4px; }
   .t-match.tied .t-note { display: block; }
   .t-bracket-round { margin-top: 14px; }
@@ -676,6 +687,7 @@
   :root[data-theme="light"] .t-table td:nth-child(3) { box-shadow: none; }
   :root[data-theme="light"] .t-table tr.qualifies td:first-child { color: var(--red-dark); }
   :root[data-theme="light"] .t-note { color: var(--red); }
+  :root[data-theme="light"] input[type=number].t-score.game-win { border-color: var(--green); color: var(--green-dark); }
   @media print {
     #resumeTournament, #tResetBtn { display: none !important; }
     .t-match, .t-table td { background: #fff !important; color: #262626 !important; border: 1px solid #ccc; }
@@ -814,6 +826,20 @@
           <option value="2">Top 2 play a final</option>
           <option value="4" selected>Top 4 (semifinals &amp; final)</option>
           <option value="8">Top 8 (quarterfinals, semis &amp; final)</option>
+        </select>
+      </div>
+      <div class="field t-format" id="poolBestOfField" style="display:none;">
+        <label for="poolBestOf">Pool play matches</label>
+        <select id="poolBestOf">
+          <option value="3" selected>Best of 3 games</option>
+          <option value="1">One game</option>
+        </select>
+      </div>
+      <div class="field t-format" id="playoffBestOfField" style="display:none;">
+        <label for="playoffBestOf">Playoff matches</label>
+        <select id="playoffBestOf">
+          <option value="3" selected>Best of 3 games</option>
+          <option value="1">One game</option>
         </select>
       </div>
     </div>
@@ -1170,6 +1196,8 @@
       }
       const isTournament = mode === 'tournament';
       document.getElementById('playoffField').style.display = isTournament ? 'block' : 'none';
+      document.getElementById('poolBestOfField').style.display = isTournament ? 'block' : 'none';
+      document.getElementById('playoffBestOfField').style.display = isTournament ? 'block' : 'none';
       document.getElementById('drawTeamsBtn').style.display = isTournament ? '' : 'none';
       document.getElementById('floatersHint').style.display = isTournament ? 'none' : 'block';
       document.getElementById('floatersHintTournament').style.display = isTournament ? 'block' : 'none';
@@ -1955,9 +1983,10 @@
 
   // ---------- tournament mode ----------
   // Fixed teams play pool rounds (a round robin) with scores, a live standings
-  // table ranks them (wins, then point difference, then points scored), and the
-  // top teams can go on to a single-elimination bracket. The whole tournament is
-  // saved in this browser, so a refresh or a closed tab mid-event loses nothing.
+  // table ranks them, and the top teams can go on to a single-elimination
+  // bracket. Each match is a single game or best of 3 (set separately for pool
+  // play and playoffs). The whole tournament is saved in this browser, so a
+  // refresh or a closed tab mid-event loses nothing.
   const T_KEY = 'pbMixer.tournament';
   const tournamentSection = document.getElementById('tournamentSection');
   const resumeTournamentBar = document.getElementById('resumeTournament');
@@ -1966,7 +1995,10 @@
   const championWrap = document.getElementById('championWrap');
   const standingsTable = document.getElementById('standingsTable');
   const standingsHint = document.getElementById('standingsHint');
-  let tournament = null; // {teams:[{id,name}], courts, playoffSize, pool:[{roundNumber, heats:[[match]], byes:[id]}], bracket}
+  // {teams:[{id,name}], courts, playoffSize, poolBestOf, playoffBestOf,
+  //  pool:[{roundNumber, heats:[[match]], byes:[id]}], bracket:{size, seeds, rounds:[[match]]}}
+  // match: {id, a, b, bestOf, games:[{a, b}]} — a/b are team ids, games hold scores.
+  let tournament = null;
 
   function saveTournament() {
     try { if (tournament) saveJSON(T_KEY, tournament); else localStorage.removeItem(T_KEY); } catch (e) {}
@@ -1989,14 +2021,35 @@
     const n = parseInt(v, 10);
     return isNaN(n) || n < 0 ? null : n;
   }
+  function newMatch(id, a, b, bestOf) {
+    return { id, a, b, bestOf, games: Array.from({ length: bestOf }, () => ({ a: null, b: null })) };
+  }
+  function gamesToWin(m) { return Math.ceil(m.bestOf / 2); }
+  // Walks the games in order and stops once a team has won the match, so a stray
+  // score typed into an unneeded game 3 never counts.
+  function countedGames(m) {
+    const need = gamesToWin(m);
+    let wa = 0, wb = 0;
+    const counted = [];
+    for (const g of m.games) {
+      if (wa >= need || wb >= need) break;
+      if (g.a == null || g.b == null || g.a === g.b) continue;
+      counted.push(g);
+      if (g.a > g.b) wa++; else wb++;
+    }
+    return { wa, wb, counted };
+  }
   function matchWinner(m) {
-    if (!m || m.a == null || m.b == null || m.sa == null || m.sb == null || m.sa === m.sb) return null;
-    return m.sa > m.sb ? m.a : m.b;
+    if (!m || m.a == null || m.b == null) return null;
+    const { wa, wb } = countedGames(m);
+    const need = gamesToWin(m);
+    return wa >= need ? m.a : (wb >= need ? m.b : null);
   }
   function poolMatches() { return tournament.pool.flatMap(r => r.heats.flat()); }
   function bracketMatches() { return tournament.bracket ? tournament.bracket.rounds.flat() : []; }
   function findMatch(id) { return poolMatches().concat(bracketMatches()).find(m => m.id === id); }
   function poolScoredCount() { return poolMatches().filter(m => matchWinner(m) != null).length; }
+  function formatLabel(bestOf) { return bestOf === 3 ? 'best of 3 games' : 'one game'; }
 
   // Largest bracket (8, 4 or 2) that fits both the chosen size and the team count.
   function playoffSizeFor(wanted, teamCount) {
@@ -2017,20 +2070,22 @@
     return ['Final', 'Semifinals', 'Quarterfinals'][fromEnd] || `Playoff Round ${roundIdx + 1}`;
   }
 
+  // Ranked by matches won, then game difference (best of 3), then point difference, then points scored.
   function computeStandings() {
     const rows = {};
-    tournament.teams.forEach(t => { rows[t.id] = { id: t.id, name: t.name, played: 0, w: 0, l: 0, pf: 0, pa: 0 }; });
+    tournament.teams.forEach(t => { rows[t.id] = { id: t.id, name: t.name, w: 0, l: 0, gw: 0, gl: 0, pf: 0, pa: 0 }; });
     poolMatches().forEach(m => {
-      if (matchWinner(m) == null) return;
+      const winner = matchWinner(m);
+      if (winner == null) return;
       const ra = rows[m.a], rb = rows[m.b];
       if (!ra || !rb) return;
-      ra.played++; rb.played++;
-      ra.pf += m.sa; ra.pa += m.sb;
-      rb.pf += m.sb; rb.pa += m.sa;
-      if (m.sa > m.sb) { ra.w++; rb.l++; } else { rb.w++; ra.l++; }
+      const { wa, wb, counted } = countedGames(m);
+      ra.gw += wa; ra.gl += wb; rb.gw += wb; rb.gl += wa;
+      counted.forEach(g => { ra.pf += g.a; ra.pa += g.b; rb.pf += g.b; rb.pa += g.a; });
+      if (winner === m.a) { ra.w++; rb.l++; } else { rb.w++; ra.l++; }
     });
     return Object.values(rows).sort((x, y) =>
-      (y.w - x.w) || ((y.pf - y.pa) - (x.pf - x.pa)) || (y.pf - x.pf) || x.name.localeCompare(y.name));
+      (y.w - x.w) || ((y.gw - y.gl) - (x.gw - x.gl)) || ((y.pf - y.pa) - (x.pf - x.pa)) || (y.pf - x.pf) || x.name.localeCompare(y.name));
   }
 
   function startTournamentClicked() {
@@ -2054,6 +2109,8 @@
         desiredRounds = parseInt(document.getElementById('customRounds').value, 10);
         if (!desiredRounds || desiredRounds < 1) throw new Error('Enter a valid number of pool rounds.');
       }
+      const poolBestOf = parseInt(document.getElementById('poolBestOf').value, 10) === 3 ? 3 : 1;
+      const playoffBestOf = parseInt(document.getElementById('playoffBestOf').value, 10) === 3 ? 3 : 1;
 
       const rounds = buildDisplayRounds(reorderTeamsForFairness(teams, {}), courts, desiredRounds, 1);
       let matchNo = 0;
@@ -2061,9 +2118,11 @@
         teams,
         courts,
         playoffSize: parseInt(document.getElementById('playoffSize').value, 10) || 0,
+        poolBestOf,
+        playoffBestOf,
         pool: rounds.map(r => ({
           roundNumber: r.roundNumber,
-          heats: r.heats.map(h => h.map(m => ({ id: 'p' + (++matchNo), a: m.a.id, b: m.b.id, sa: null, sb: null }))),
+          heats: r.heats.map(h => h.map(m => newMatch('p' + (++matchNo), m.a.id, m.b.id, poolBestOf))),
           byes: r.byes.map(b => b.id)
         })),
         bracket: null
@@ -2096,18 +2155,19 @@
     if (!size) return;
     const total = poolMatches().length;
     const scored = poolScoredCount();
-    if (scored < total && !confirm(`${total - scored} pool game${total - scored === 1 ? ' has' : 's have'} no score yet. Start the playoffs using the standings as they are now?`)) return;
+    if (scored < total && !confirm(`${total - scored} pool match${total - scored === 1 ? ' is' : 'es are'} not finished yet. Start the playoffs using the standings as they are now?`)) return;
 
+    const bestOf = tournament.playoffBestOf || 1;
     const order = seedOrder(size);
     const seeds = {};
     standings.slice(0, size).forEach((row, i) => { seeds[row.id] = i + 1; });
     const first = [];
     for (let i = 0; i < order.length; i += 2) {
-      first.push({ id: `b0-${i / 2}`, a: standings[order[i] - 1].id, b: standings[order[i + 1] - 1].id, sa: null, sb: null });
+      first.push(newMatch(`b0-${i / 2}`, standings[order[i] - 1].id, standings[order[i + 1] - 1].id, bestOf));
     }
     const rounds = [first];
     for (let r = 1, count = first.length / 2; count >= 1; r++, count /= 2) {
-      rounds.push(Array.from({ length: count }, (_, i) => ({ id: `b${r}-${i}`, a: null, b: null, sa: null, sb: null })));
+      rounds.push(Array.from({ length: count }, (_, i) => newMatch(`b${r}-${i}`, null, null, bestOf)));
     }
     tournament.bracket = { size, seeds, rounds };
     saveTournament();
@@ -2115,7 +2175,7 @@
     bracketWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  // Moves winners into the next playoff round. A later game keeps its scores while
+  // Moves winners into the next playoff round. A later match keeps its scores while
   // an earlier one is being re-typed, and only clears them if a different team
   // actually advances into it.
   function syncBracket() {
@@ -2126,7 +2186,7 @@
         ['a', 'b'].forEach((side, k) => {
           const w = matchWinner(rounds[r - 1][i * 2 + k]);
           const lastKey = side === 'a' ? 'lastA' : 'lastB';
-          if (w != null && m[lastKey] != null && m[lastKey] !== w) { m.sa = null; m.sb = null; }
+          if (w != null && m[lastKey] != null && m[lastKey] !== w) m.games.forEach(g => { g.a = null; g.b = null; });
           if (w != null) m[lastKey] = w;
           m[side] = w;
         });
@@ -2146,16 +2206,20 @@
   }
 
   function matchCardHtml(m, label, opts) {
-    const seeds = (opts && opts.seeds) || null;
-    const side = (key, scoreKey) => {
-      const id = m[key];
-      const seed = seeds ? '<span class="t-seed"></span>' : '';
-      const val = m[scoreKey] == null ? '' : m[scoreKey];
-      return `<div class="t-side" data-side="${key}">${seed}<span class="t-name">${escapeHtml(tTeamName(id))}</span>` +
-        `<input type="number" class="t-score" inputmode="numeric" min="0" max="99" data-mid="${m.id}" data-score="${scoreKey}" value="${val}" aria-label="Score"></div>`;
+    const withSeeds = !!(opts && opts.seeds);
+    const multi = m.bestOf > 1;
+    const gameHead = multi
+      ? `<div class="t-side t-game-head"><span class="t-name"></span>${m.games.map((_, g) => `<span class="t-game-label">G${g + 1}</span>`).join('')}</div>`
+      : '';
+    const side = (key) => {
+      const inputs = m.games.map((game, g) => {
+        const val = game[key] == null ? '' : game[key];
+        return `<input type="number" class="t-score${multi ? ' t-score-sm' : ''}" inputmode="numeric" min="0" max="99" data-mid="${m.id}" data-game="${g}" data-side="${key}" value="${val}" aria-label="Game ${g + 1} score">`;
+      }).join('');
+      return `<div class="t-side" data-side="${key}">${withSeeds ? '<span class="t-seed"></span>' : ''}<span class="t-name">${escapeHtml(tTeamName(m[key]))}</span>${inputs}</div>`;
     };
     return `<div class="t-match" data-mid="${m.id}"><div class="t-court"><span>${escapeHtml(label)}</span><span class="t-status"></span></div>` +
-      side('a', 'sa') + side('b', 'sb') + `<div class="t-note">Tied score: games need a winner.</div></div>`;
+      gameHead + side('a') + side('b') + `<div class="t-note">Tied game score: each game needs a winner.</div></div>`;
   }
 
   function renderTournament() {
@@ -2185,11 +2249,11 @@
       const courts = tournament.courts || 1;
       const html = rounds.map((round, rIdx) => {
         const name = bracketRoundName(rIdx, rounds.length);
-        const cards = round.map((m, i) => matchCardHtml(m, round.length > 1 ? `${name} ${i + 1} · Court ${(i % courts) + 1}` : `${name} · Court 1`, { seeds: tournament.bracket.seeds })).join('');
+        const cards = round.map((m, i) => matchCardHtml(m, round.length > 1 ? `${name} ${i + 1} · Court ${(i % courts) + 1}` : `${name} · Court 1`, { seeds: true })).join('');
         return `<div class="t-bracket-round"><div class="heat-label">${name}</div><div class="t-matches">${cards}</div></div>`;
       }).join('');
       bracketWrap.innerHTML = `<div class="card"><h3>Playoffs · Top ${tournament.bracket.size}</h3>` +
-        `<p class="card-hint">Seeded from pool play. Enter scores and the winner moves on automatically.</p>${html}` +
+        `<p class="card-hint">Seeded from pool play. Each match is ${formatLabel(tournament.playoffBestOf || 1)}. Enter scores and the winner moves on automatically.</p>${html}` +
         `<div class="actions" style="margin-top:14px;"><button type="button" class="danger small" id="redoPlayoffsBtn">Redo playoff seeding</button></div></div>`;
       document.getElementById('redoPlayoffsBtn').addEventListener('click', () => {
         if (!confirm('Clear the playoff bracket and its scores? You can then start the playoffs again from the current standings.')) return;
@@ -2202,8 +2266,9 @@
     tournamentSection.querySelectorAll('input.t-score').forEach(inp => {
       inp.addEventListener('input', () => {
         const m = findMatch(inp.dataset.mid);
-        if (!m) return;
-        m[inp.dataset.score] = parseScore(inp.value);
+        const game = m && m.games[parseInt(inp.dataset.game, 10)];
+        if (!game) return;
+        game[inp.dataset.side] = parseScore(inp.value);
         syncBracket();
         saveTournament();
         refreshTournament();
@@ -2220,10 +2285,16 @@
       if (!m) return;
       const w = matchWinner(m);
       const ready = m.a != null && m.b != null;
+      const { wa, wb, counted } = countedGames(m);
+      const anyTie = m.games.some(g => g.a != null && g.b != null && g.a === g.b);
       card.classList.toggle('done', w != null);
-      card.classList.toggle('tied', ready && m.sa != null && m.sb != null && m.sa === m.sb);
-      card.querySelector('.t-status').textContent = w != null ? 'Final' : (ready ? '' : 'Waiting');
-      card.querySelectorAll('.t-side').forEach(sideEl => {
+      card.classList.toggle('tied', ready && anyTie);
+      let status = '';
+      if (!ready) status = 'Waiting';
+      else if (m.bestOf > 1 && (wa || wb)) status = `${w != null ? 'Final ' : ''}${wa}–${wb}`;
+      else if (w != null) status = 'Final';
+      card.querySelector('.t-status').textContent = status;
+      card.querySelectorAll('.t-side[data-side]').forEach(sideEl => {
         const key = sideEl.dataset.side;
         const id = m[key];
         sideEl.classList.toggle('win', w != null && w === id);
@@ -2231,10 +2302,17 @@
         sideEl.querySelector('.t-name').textContent = tTeamName(id);
         const seedEl = sideEl.querySelector('.t-seed');
         if (seedEl) seedEl.textContent = id != null && tournament.bracket && tournament.bracket.seeds[id] ? '#' + tournament.bracket.seeds[id] : '';
-        const inp = sideEl.querySelector('input.t-score');
-        inp.disabled = !ready;
-        const val = m[key === 'a' ? 'sa' : 'sb'];
-        if (document.activeElement !== inp && String(val == null ? '' : val) !== inp.value) inp.value = val == null ? '' : val;
+        sideEl.querySelectorAll('input.t-score').forEach(inp => {
+          const g = parseInt(inp.dataset.game, 10);
+          const game = m.games[g];
+          // A game that's no longer needed (match already won) is greyed out, unless it has a score in it.
+          const unneeded = w != null && g >= counted.length && game.a == null && game.b == null;
+          inp.disabled = !ready || unneeded;
+          const gw = counted.includes(game) ? (game.a > game.b ? 'a' : 'b') : null;
+          inp.classList.toggle('game-win', gw === key);
+          const val = game[key];
+          if (document.activeElement !== inp && String(val == null ? '' : val) !== inp.value) inp.value = val == null ? '' : val;
+        });
       });
     });
 
@@ -2245,30 +2323,36 @@
       const done = ms.filter(m => matchWinner(m) != null).length;
       const complete = ms.length > 0 && done === ms.length;
       el.classList.toggle('complete', complete);
-      el.querySelector('.lock-badge').textContent = complete ? '✅ Complete' : `${done} of ${ms.length} scored`;
+      el.querySelector('.lock-badge').textContent = complete ? '✅ Complete' : `${done} of ${ms.length} finished`;
     });
 
     // Standings
     const standings = computeStandings();
     const size = playoffSizeFor(tournament.playoffSize, tournament.teams.length);
     const qualifyCount = tournament.bracket ? tournament.bracket.size : size;
-    standingsTable.innerHTML = '<table class="t-table"><thead><tr><th class="num">#</th><th>Team</th><th class="num">W</th><th class="num">L</th><th class="num">+/−</th><th class="num">Pts</th></tr></thead><tbody>' +
+    const showGames = (tournament.poolBestOf || 1) > 1;
+    const signed = n => (n > 0 ? '+' : '') + n;
+    standingsTable.innerHTML = '<table class="t-table"><thead><tr><th class="num">#</th><th>Team</th><th class="num">W</th><th class="num">L</th>' +
+      (showGames ? '<th class="num">Gms</th>' : '') + '<th class="num">+/−</th><th class="num pts">Pts</th></tr></thead><tbody>' +
       standings.map((row, i) => {
-        const diff = row.pf - row.pa;
         const cls = [i < qualifyCount ? 'qualifies' : '', qualifyCount && i === qualifyCount - 1 && i < standings.length - 1 ? 'cutoff' : ''].join(' ').trim();
         return `<tr class="${cls}"><td class="num">${i + 1}</td><td class="team">${escapeHtml(row.name)}</td><td class="num">${row.w}</td><td class="num">${row.l}</td>` +
-          `<td class="num">${diff > 0 ? '+' : ''}${diff}</td><td class="num">${row.pf}</td></tr>`;
+          (showGames ? `<td class="num">${row.gw}–${row.gl}</td>` : '') +
+          `<td class="num">${signed(row.pf - row.pa)}</td><td class="num pts">${row.pf}</td></tr>`;
       }).join('') + '</tbody></table>';
     const total = poolMatches().length;
     const scored = poolScoredCount();
-    const tiebreak = 'Ranked by wins, then point difference (+/−), then points scored.';
-    standingsHint.textContent = `${scored} of ${total} pool games scored. ${tiebreak}` + (qualifyCount ? ` Top ${qualifyCount} go to the playoffs.` : '');
+    const tiebreak = showGames
+      ? 'Pool matches are best of 3. Ranked by matches won, then games won minus lost, then point difference (+/−), then points scored.'
+      : 'Ranked by wins, then point difference (+/−), then points scored.';
+    standingsHint.textContent = `${scored} of ${total} pool matches finished. ${tiebreak}` + (qualifyCount ? ` Top ${qualifyCount} go to the playoffs.` : '');
 
     const startHint = document.getElementById('playoffStartHint');
     if (startHint) {
+      const rounds = size === 2 ? 'a final' : size === 4 ? 'semifinals, then a final' : 'quarterfinals, semifinals, then a final';
       startHint.textContent = scored === total
         ? `Pool play is done. The top ${size} teams are set, so start the bracket when you're ready.`
-        : `The top ${size} teams after pool play go to a single-elimination bracket (${size === 2 ? 'a final' : size === 4 ? 'semifinals, then a final' : 'quarterfinals, semifinals, then a final'}). Finish the pool games first, or start early if you're short on time.`;
+        : `The top ${size} teams after pool play go to a single-elimination bracket (${rounds}, each ${formatLabel(tournament.playoffBestOf || 1)}). Finish the pool matches first, or start early if you're short on time.`;
     }
 
     // Champion
@@ -2287,22 +2371,30 @@
     setResumeBar(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+  function gamesText(m) {
+    return m.games.filter(g => g.a != null || g.b != null).map(g => `${g.a == null ? '' : g.a}-${g.b == null ? '' : g.b}`).join(', ');
+  }
   document.getElementById('tCsvBtn').addEventListener('click', () => {
-    const rows = [['Pool play'], ['Round', 'Heat', 'Court', 'Team A', 'Score A', 'Score B', 'Team B']];
+    const matchWins = m => { const { wa, wb } = countedGames(m); return [wa, wb]; };
+    const rows = [['Pool play'], ['Round', 'Heat', 'Court', 'Team A', 'Games won A', 'Games won B', 'Team B', 'Game scores (A-B)', 'Winner']];
     tournament.pool.forEach(round => {
       round.heats.forEach((heat, hIdx) => heat.forEach((m, i) => {
-        rows.push([round.roundNumber, hIdx + 1, i + 1, tTeamName(m.a), m.sa == null ? '' : m.sa, m.sb == null ? '' : m.sb, tTeamName(m.b)]);
+        const [wa, wb] = matchWins(m);
+        const w = matchWinner(m);
+        rows.push([round.roundNumber, hIdx + 1, i + 1, tTeamName(m.a), wa, wb, tTeamName(m.b), gamesText(m), w == null ? '' : tTeamName(w)]);
       }));
-      round.byes.forEach(id => rows.push([round.roundNumber, '-', '-', tTeamName(id) + ' (SITTING OUT)', '', '', '']));
+      round.byes.forEach(id => rows.push([round.roundNumber, '-', '-', tTeamName(id) + ' (SITTING OUT)']));
     });
-    rows.push([], ['Standings'], ['Rank', 'Team', 'Wins', 'Losses', 'Points for', 'Points against', '+/-']);
-    computeStandings().forEach((r, i) => rows.push([i + 1, r.name, r.w, r.l, r.pf, r.pa, r.pf - r.pa]));
+    rows.push([], ['Standings'], ['Rank', 'Team', 'Match wins', 'Match losses', 'Games won', 'Games lost', 'Points for', 'Points against', '+/-']);
+    computeStandings().forEach((r, i) => rows.push([i + 1, r.name, r.w, r.l, r.gw, r.gl, r.pf, r.pa, r.pf - r.pa]));
     if (tournament.bracket) {
-      rows.push([], ['Playoffs'], ['Round', 'Seed A', 'Team A', 'Score A', 'Score B', 'Team B', 'Seed B']);
+      rows.push([], ['Playoffs'], ['Round', 'Seed A', 'Team A', 'Games won A', 'Games won B', 'Team B', 'Seed B', 'Game scores (A-B)', 'Winner']);
       const seeds = tournament.bracket.seeds;
       tournament.bracket.rounds.forEach((round, rIdx) => round.forEach(m => {
-        rows.push([bracketRoundName(rIdx, tournament.bracket.rounds.length), seeds[m.a] || '', tTeamName(m.a),
-          m.sa == null ? '' : m.sa, m.sb == null ? '' : m.sb, tTeamName(m.b), seeds[m.b] || '']);
+        const [wa, wb] = matchWins(m);
+        const w = matchWinner(m);
+        rows.push([bracketRoundName(rIdx, tournament.bracket.rounds.length), seeds[m.a] || '', tTeamName(m.a), wa, wb,
+          tTeamName(m.b), seeds[m.b] || '', gamesText(m), w == null ? '' : tTeamName(w)]);
       }));
     }
     const champ = championId();
@@ -2319,10 +2411,21 @@
     URL.revokeObjectURL(url);
   });
 
+  // Tournaments saved by the first version stored one score per side (sa/sb).
+  function upgradeMatch(m) {
+    if (!Array.isArray(m.games)) {
+      m.bestOf = 1;
+      m.games = [{ a: m.sa == null ? null : m.sa, b: m.sb == null ? null : m.sb }];
+      delete m.sa; delete m.sb;
+    }
+  }
   function restoreTournament() {
     const saved = loadJSON(T_KEY, null);
     if (!saved || !Array.isArray(saved.teams) || !Array.isArray(saved.pool)) return;
     tournament = saved;
+    poolMatches().concat(bracketMatches()).forEach(upgradeMatch);
+    if (!tournament.poolBestOf) tournament.poolBestOf = 1;
+    if (!tournament.playoffBestOf) tournament.playoffBestOf = 1;
     // Keep new ids clear of the saved tournament's team ids.
     tournament.teams.forEach(t => { if (t.id >= nextEditId) nextEditId = t.id + 1; });
     renderTournament();
